@@ -1,0 +1,18 @@
+\global\mdfdefinestyle{mymdstyle}{%
+	leftline=false,rightline=false,
+	innerleftmargin=6,innerrightmargin=6,
+	backgroundcolor=myyellow,
+	linecolor=black,linewidth=0.5pt,%
+	leftmargin=0cm,rightmargin=0cm
+}
+
+\def\abstract{Here is the abstract. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.}
+\def\keyword{data science; machine learning; kaggle; survey}
+	
+\begin{mdframed}[style=mymdstyle]
+	\fontsize{12pt}{0} \selectfont
+	\setlength{\lineskip}{6pt}  \setlength{\parskip}{0pt} 
+	\noindent \textbf{Abstract}\ \ \textnormal{\abstract}\\
+	\par \noindent
+	\textbf{Keywords:}\ \textnormal{\keyword}
+\end{mdframed}
