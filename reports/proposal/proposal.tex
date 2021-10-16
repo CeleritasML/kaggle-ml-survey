@@ -16,6 +16,7 @@
 \usepackage{fancyhdr}
 \usepackage{amssymb}
 \pagestyle{fancyplain}
+\fancyhead{}											% No page header
 \renewcommand{\headrulewidth}{0pt}			% Remove header underlines
 \renewcommand{\footrulewidth}{0pt}				% Remove footer underlines
 \setlength{\headheight}{13.6pt}
@@ -45,19 +46,13 @@
 
 \begin{document}
 	\input{title.tex}
-	\input{abstract.tex}
-
 	\section{Introduction}
 	\input{introduction.tex}
 	\section{Dataset}
 	\input{data.tex}
 	\section{Analysis}
 	\input{analysis.tex}
-	\section{Result}
-	\input{result.tex}
-	\section{Conclusion}
+	\section{Expected Result}
 	\input{conclusion.tex}
-	\section{Appendix}
-	\input{appendix.tex}
 	\clearpage
 \end{document}
