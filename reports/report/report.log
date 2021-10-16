@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.12.16)  16 OCT 2021 00:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.12.16)  16 OCT 2021 15:08
 entering extended mode
 **./report.tex
 (report.tex
@@ -1019,71 +1019,71 @@ Class scrartcl Warning: Incompatible package `sectsty' loaded!
 
 (scrartcl)              Ignoring this warning could result in several error
 (scrartcl)              messages and formatting issues after loading package
-(scrartcl)              `sectsty' on input line 25.
+(scrartcl)              `sectsty' on input line 26.
 
 (report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 46.
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for FML/futm/m/it on input line 46.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 47.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 47.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 47.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 47.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 47.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 47.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for FML/futm/m/it on input line 47.
 LaTeX Font Info:    Trying to load font information for FML+futm on input line 
-46.
+47.
 
 ("C:\Users\GJS\AppData\Local\Programs\MiKTeX 2.9\tex/latex/fourier\fmlfutm.fd"
 File: fmlfutm.fd 2004/10/30 Fontinst v1.926 font definitions for FML/futm.
 )
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for FMS/futm/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for FMS/futm/m/n on input line 47.
 LaTeX Font Info:    Trying to load font information for FMS+futm on input line 
-46.
+47.
 ("C:\Users\GJS\AppData\Local\Programs\MiKTeX 2.9\tex/latex/fourier\fmsfutm.fd"
 File: fmsfutm.fd 2004/10/30 Fontinst v1.926 font definitions for FMS/futm.
 )
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for FMX/futm/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for FMX/futm/m/n on input line 47.
 LaTeX Font Info:    Trying to load font information for FMX+futm on input line 
-46.
+47.
 ("C:\Users\GJS\AppData\Local\Programs\MiKTeX 2.9\tex/latex/fourier\fmxfutm.fd"
 File: fmxfutm.fd futm-extension
 )
-LaTeX Font Info:    ... okay on input line 46.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 46.
+LaTeX Font Info:    ... okay on input line 47.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 47.
 LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 4
-6.
+7.
 ("C:\Users\GJS\AppData\Local\Programs\MiKTeX 2.9\tex/latex/base\ts1cmr.fd"
 File: ts1cmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 46.
+LaTeX Font Info:    ... okay on input line 47.
 LaTeX Font Info:    Trying to load font information for T1+futs on input line 4
-6.
+7.
 
 ("C:\Users\GJS\AppData\Local\Programs\MiKTeX 2.9\tex/latex/fourier\t1futs.fd"
 File: t1futs.fd 2004/03/02 Fontinst v1.926 font definitions for T1/futs.
 )
-Package scrbase Info: activating english \contentsname on input line 46.
-Package scrbase Info: activating english \listfigurename on input line 46.
-Package scrbase Info: activating english \listtablename on input line 46.
-LaTeX Font Info:    Redeclaring math accent \widehat on input line 46.
-LaTeX Font Info:    Redeclaring math accent \widetilde on input line 46.
-LaTeX Info: Redefining \microtypecontext on input line 46.
+Package scrbase Info: activating english \contentsname on input line 47.
+Package scrbase Info: activating english \listfigurename on input line 47.
+Package scrbase Info: activating english \listtablename on input line 47.
+LaTeX Font Info:    Redeclaring math accent \widehat on input line 47.
+LaTeX Font Info:    Redeclaring math accent \widetilde on input line 47.
+LaTeX Info: Redefining \microtypecontext on input line 47.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `basictext'.
-LaTeX Info: Redefining \showhyphens on input line 46.
+LaTeX Info: Redefining \showhyphens on input line 47.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -1189,35 +1189,26 @@ Underfull \hbox (badness 10000) in paragraph at lines 15--16
 
  []
 
-) (introduction.tex) (data.tex)
-
-Package Fancyhdr Warning: \headheight is too small (13.6pt): 
-Make it at least 14.49998pt.
-We now make it that large for the rest of the document.
-This may cause the page layout to be inconsistent, however.
-
-[1
+) (introduction.tex) (data.tex) (analysis.tex) [1
 
 
-{C:/Users/GJS/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-(analysis.tex) (result.tex) (conclusion.tex) (appendix.tex) [2] (report.aux) ) 
+{C:/Users/GJS/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] (result.tex) 
+(conclusion.tex) (appendix.tex) [2] (report.aux) ) 
 Here is how much of TeX's memory you used:
- 20864 strings out of 492484
- 384191 string characters out of 3122506
- 571762 words of memory out of 3000000
- 24868 multiletter control sequences out of 15000+200000
- 594530 words of font info for 132 fonts, out of 3000000 for 9000
+ 20846 strings out of 492484
+ 384047 string characters out of 3122506
+ 572735 words of memory out of 3000000
+ 24865 multiletter control sequences out of 15000+200000
+ 593332 words of font info for 124 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  57i,11n,88p,10127b,317s stack positions out of 5000i,500n,10000p,200000b,50000s
-{
-C:/Users/GJS/AppData/Local/Programs/MiKTeX 2.9/fonts/enc/dvips/base/8r.enc}<C:/
-Users/GJS/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/adobe/utopia/putb8a.pfb
-><C:/Users/GJS/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/adobe/utopia/putr8
-a.pfb><C:/Users/GJS/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/adobe/utopia/
-putr8a.pfb>
-Output written on report.pdf (2 pages, 46286 bytes).
+{C:/Users/GJS/AppData/Local/P
+rograms/MiKTeX 2.9/fonts/enc/dvips/base/8r.enc}<C:/Users/GJS/AppData/Local/Prog
+rams/MiKTeX 2.9/fonts/type1/adobe/utopia/putb8a.pfb><C:/Users/GJS/AppData/Local
+/Programs/MiKTeX 2.9/fonts/type1/adobe/utopia/putr8a.pfb>
+Output written on report.pdf (2 pages, 35485 bytes).
 PDF statistics:
- 22 PDF objects out of 1000 (max. 8388607)
+ 18 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 25601 words of extra memory for PDF output out of 29859 (max. 10000000)
+ 19969 words of extra memory for PDF output out of 20736 (max. 10000000)
 
