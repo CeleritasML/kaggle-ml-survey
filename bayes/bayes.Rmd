@@ -1,0 +1,73 @@
+---
+title: "BayesNetwork"
+author: "Jingsong, GAO"
+date: "2021/10/19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(bnlearn)
+library(dplyr)
+library(gRain)
+library(lattice)
+library(Rgraphviz)
+```
+
+```{r}
+file = "../data/kaggle_survey_2021_responses.csv"
+headers = read.csv(file, skip = 0, header = F, nrows = 1, as.is = T, fileEncoding = "utf8")
+dat = read.csv(file, skip = 2, header = F, fileEncoding = "utf8")
+colnames(dat)= headers
+```
+
+
+
+```{r}
+dat.small = data.frame(
+  age = factor(dat$Q1),
+  gender = factor(dat$Q2),
+  country = factor(dat$Q3),
+  education = factor(dat$Q4),
+  title = factor(dat$Q5),
+  code.year = factor(dat$Q6),
+  code.python = factor(dat$Q7_Part_1 != ""),
+  code.r = factor(dat$Q7_Part_2 != ""),
+  code.sql = factor(dat$Q7_Part_3 != ""),
+  code.c = factor(dat$Q7_Part_4 != ""),
+  code.cpp = factor(dat$Q7_Part_5 != ""),
+  code.java = factor(dat$Q7_Part_6 != ""),
+  code.javascript = factor(dat$Q7_Part_7 != ""),
+  code.julia = factor(dat$Q7_Part_8 != ""),
+  code.swift = factor(dat$Q7_Part_9 != ""),
+  code.bash = factor(dat$Q7_Part_10 != ""),
+  code.matlab = factor(dat$Q7_Part_11 != ""))
+str(dat.small)
+```
+
+```{r}
+net.small = empty.graph(names(dat.small))
+modelstring(net.small) = "[age][gender][country][education|age:gender:country][code.year][code.python][code.r][code.sql][code.c][code.cpp][code.java][code.javascript][code.julia][code.swift][code.bash][code.matlab][title|education:code.year:code.python:code.r:code.sql:code.c:code.cpp:code.java:code.javascript:code.julia:code.swift:code.bash:code.matlab]"
+net.small
+```
+
+```{r}
+graphviz.plot(net.small)
+```
+
+
+```{r}
+fit = bn.fit(net.small, dat.small)
+```
+
+```{r}
+#graphviz.chart(test, type = "barprob")
+junction = compile(as.grain(fit))
+jedu = setEvidence(junction, nodes = c("age", "gender", "country", "code.python"), states = c("18-21", "Man", "China", "TRUE"))
+querygrain(jedu, nodes = c("education", "title"), type = "marginal")
+```
+
+
