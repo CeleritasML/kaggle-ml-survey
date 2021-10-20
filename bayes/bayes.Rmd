@@ -24,8 +24,7 @@ dat = read.csv(file, skip = 2, header = F, fileEncoding = "utf8")
 colnames(dat)= headers
 ```
 
-
-
+Use a subset of questions and rename columns.
 ```{r}
 dat.small = data.frame(
   age = factor(dat$Q1),
@@ -48,26 +47,37 @@ dat.small = data.frame(
 str(dat.small)
 ```
 
+Build a network based on the subset.
 ```{r}
 net.small = empty.graph(names(dat.small))
 modelstring(net.small) = "[age][gender][country][education|age:gender:country][code.year][code.python][code.r][code.sql][code.c][code.cpp][code.java][code.javascript][code.julia][code.swift][code.bash][code.matlab][title|education:code.year:code.python:code.r:code.sql:code.c:code.cpp:code.java:code.javascript:code.julia:code.swift:code.bash:code.matlab]"
 net.small
 ```
 
+Visualize the network.
 ```{r}
 graphviz.plot(net.small)
 ```
 
-
+Fit the parameter in the network using the subset.
 ```{r}
 fit = bn.fit(net.small, dat.small)
 ```
 
+Play with the fitted model. 
+
+"What the marginal distribution of *education* and *job title* for a 18-21 years old man which lives in China and can code in Python?"
 ```{r}
-#graphviz.chart(test, type = "barprob")
+#graphviz.chart(fit, type = "barprob")
 junction = compile(as.grain(fit))
-jedu = setEvidence(junction, nodes = c("age", "gender", "country", "code.python"), states = c("18-21", "Man", "China", "TRUE"))
-querygrain(jedu, nodes = c("education", "title"), type = "marginal")
+j1 = setEvidence(junction, nodes = c("age", "gender", "country", "code.python"), states = c("18-21", "Man", "China", "TRUE"))
+querygrain(j1, nodes = c("education", "title"), type = "marginal")
+```
+
+"What if he can't code in Python?"
+```{r}
+j2 = setEvidence(junction, nodes = c("age", "gender", "country", "code.python"), states = c("18-21", "Man", "China", "FALSE"))
+querygrain(j2, nodes = c("education", "title"), type = "marginal")
 ```
 
 
