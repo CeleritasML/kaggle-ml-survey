@@ -1,0 +1,128 @@
+---
+title: "BayesNetwork"
+author: "Jingsong, GAO"
+date: "2021/10/19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(bnlearn)
+library(dplyr)
+library(gRain)
+library(lattice)
+library(Rgraphviz)
+```
+
+```{r}
+file = "../data/kaggle_survey_2021_responses.csv"
+headers = read.csv(file, skip = 0, header = F, nrows = 1, as.is = T, fileEncoding = "utf8")
+dat = read.csv(file, skip = 2, header = F, fileEncoding = "utf8")
+colnames(dat)= headers
+```
+
+Use a subset of questions and rename columns.
+```{r}
+dat$Q2[dat$Q2 %in% c("Nonbinary", "Prefer not to say", "Prefer to self-describe")] = "Other"
+dat$Q3[dat$Q3 == "Hong Kong (S.A.R.)"] = "HKSAR"
+dat$Q3[dat$Q3 == "I do not wish to disclose my location"] = "Other"
+dat$Q3[dat$Q3 == "I do not wish to disclose my location"] = "Other"
+dat$Q3[dat$Q3 == "Iran, Islamic Republic of..."] = "Iran"
+dat$Q3[dat$Q3 == "United Arab Emirates"] = "UAE"
+dat$Q3[dat$Q3 == "United Kingdom of Great Britain and Northern Ireland"] = "UK"
+dat$Q3[dat$Q3 == "United States of America"] = "US"
+dat$Q4[dat$Q4 == "No formal education past high school"] = "HighSchool"
+dat$Q4[dat$Q4 == "Some college/university study without earning a bachelor’s degree"] = "CollegeNoDegree"
+dat$Q4[dat$Q4 == "Bachelor’s degree"] = "BS"
+dat$Q4[dat$Q4 == "Master’s degree"] = "MS"
+dat$Q4[dat$Q4 == "Doctoral degree"] = "PhD"
+dat$Q4[dat$Q4 == "Professional doctorate"] = "ProDoc"
+dat$Q4[dat$Q4 == "I prefer not to answer"] = "Other"
+dat$Q8[dat$Q8 %in% c("", "Bash", "Julia", "None", "Swift")] = "Other"
+
+dat.small = data.frame(
+  age = factor(dat$Q1),
+  gender = factor(dat$Q2),
+  country = factor(dat$Q3),
+  education = factor(dat$Q4),
+  title = factor(dat$Q5),
+  code.year = factor(dat$Q6),
+  code.python = factor(dat$Q7_Part_1 != ""),
+  code.r = factor(dat$Q7_Part_2 != ""),
+  code.sql = factor(dat$Q7_Part_3 != ""),
+  code.c = factor(dat$Q7_Part_4 != ""),
+  code.cpp = factor(dat$Q7_Part_5 != ""),
+  code.java = factor(dat$Q7_Part_6 != ""),
+  code.javascript = factor(dat$Q7_Part_7 != ""),
+  code.matlab = factor(dat$Q7_Part_11 != ""),
+  code.first = factor(dat$Q8),
+  ide.jupyter = factor(dat$Q9_Part_1 != ""),
+  ide.rstudio = factor(dat$Q9_Part_2 != ""),
+  ide.vs = factor(dat$Q9_Part_3 != ""),
+  ide.vscode = factor(dat$Q9_Part_4 != ""),
+  ide.pycharm = factor(dat$Q9_Part_5 != ""),
+  ide.spyder = factor(dat$Q9_Part_6 != ""),
+  ide.notepad = factor(dat$Q9_Part_7 != ""),
+  ide.slime = factor(dat$Q9_Part_8 != ""),
+  ide.vim = factor(dat$Q9_Part_9 != ""),
+  ide.matlab = factor(dat$Q9_Part_10 != ""),
+  compute.plat = factor(dat$Q11)
+  )
+str(dat.small)
+```
+
+Build a network based on the subset.
+```{r}
+net.small = empty.graph(names(dat.small))
+modelstring(net.small) = "[age][gender][country][education|age:gender:country][code.year][code.python][code.r][code.sql][code.c][code.cpp][code.java][code.javascript][code.matlab][title|education:code.year][code.first|education:code.python:code.r:code.sql:code.c:code.cpp:code.java:code.javascript:code.matlab][ide.jupyter|code.first][ide.rstudio|code.first][ide.vs|code.first][ide.vscode|code.first][ide.pycharm|code.first][ide.spyder|code.first][ide.notepad|code.first][ide.slime|code.first][ide.vim|code.first][ide.matlab|code.first][compute.plat|title:ide.jupyter:ide.rstudio:ide.vs:ide.vscode:ide.pycharm:ide.spyder:ide.notepad:ide.slime:ide.vim:ide.matlab]"
+net.small
+```
+
+Visualize the network.
+```{r}
+graphviz.plot(net.small)
+```
+
+Fit the parameter in the network using the subset.
+```{r}
+fit = bn.fit(net.small, dat.small)
+```
+
+Play with the fitted model. 
+
+"What the marginal distribution of *education* and *job title* for a 18-21 years old man which lives in China and can code in Python?"
+```{r}
+#graphviz.chart(fit, type = "barprob")
+junction = compile(as.grain(fit))
+j1 = setEvidence(junction, nodes = c("age", "gender", "country", "code.python"), states = c("18-21", "Man", "China", "TRUE"))
+querygrain(j1, nodes = c("education", "title", "code.first"), type = "marginal")
+```
+
+"What if he can't code in Python?"
+```{r}
+j2 = setEvidence(junction, nodes = c("age", "gender", "country", "code.python"), states = c("18-21", "Man", "China", "FALSE"))
+querygrain(j2, nodes = c("education", "title", "code.first"), type = "marginal")
+```
+```{r}
+q = querygrain(j2, nodes = c("education", "title", "code.first"), type = "marginal")
+data.frame(Prob=sort(q$code.first, decreasing=TRUE))
+```
+
+```{r}
+j3 = setEvidence(junction, nodes = c("code.first"), states = c("R"))
+querygrain(j3, nodes = c("code.python","code.r","code.sql","code.c","code.cpp","code.java","code.javascript","code.matlab"), type = "marginal")
+```
+```{r}
+q1 = cpdist(fit, c("code.python","code.r","code.sql","code.c","code.cpp","code.java","code.javascript","code.matlab"), (code.r == "TRUE"), method = "ls")
+sum(q1$code.sql == "TRUE") / length(q1$code.sql)
+```
+
+
+Save the model to RDS.
+```{r}
+saveRDS(fit, "rds/bn-small.rds")
+```
+
