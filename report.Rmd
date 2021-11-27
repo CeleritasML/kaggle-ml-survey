@@ -1,0 +1,285 @@
+---
+title: "Data Science Career Paths & Skillsets in 2021"
+subtitle: "A glimpse of Kaggle’s State of Data Science and Machine Learning Survey"
+author:
+  - Jingsong Gao, jg2109@georgetown.edu
+  - Ercong Luo, el890@georgetown.edu
+  - Rui Qiu, rq47@georgetown.edu
+date: "`r Sys.Date()`"
+output:
+  tufte::tufte_html:
+    # tufte_variant: "envisioned"
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+# invalidate cache when the package version changes
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+options(htmltools.dir.version = FALSE)
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
+               ggmosaic)
+
+set.seed(511)
+
+ggplot2::theme_set(
+  theme_fivethirtyeight() +
+    theme(
+        text = element_text(family = "Roboto Condensed"),
+        title = element_text(size = 14),
+        plot.subtitle = element_text(size = 12),
+        plot.caption = element_text(size = 10),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        panel.grid.minor.x = element_blank()
+    )
+)
+```
+
+# Section 1: Introduction
+
+Address the data science problem
+
+# Section 2: Data Cleaning
+
+```{r pkg, message=FALSE}
+col_names <- names(read_csv(
+  "data/kaggle_survey_2021_responses.csv",
+  n_max=0))
+dat <- read_csv(
+  "data/kaggle_survey_2021_responses.csv",
+  col_names = col_names, skip=2)
+
+dat <- dat %>%
+  filter(Q3=="United States of America" )
+```
+
+# Section 3: The Analysis and Results
+
+- List of questions.
+
+```{marginfigure}
+Since the one large data science problem can be divided into several smaller bits, we decide to combine the analysis and the interpretation sections together. And the questions will be addressed and discussed one by one.
+```
+
+```{marginfigure}
+The following questions are about data science career paths.
+```
+
+## Q1: Job Titles Distributions
+
+What percentage of the survey respondents are working under these job titles? 
+
+## Q2: Salaries
+
+What are the statistics on salaries for these job titles?
+
+## Q3: Requried Education Levels
+
+What levels of education are required for these job titles?
+
+## Q4: Gender Gap in Income
+
+Is there a significant income gap between genders for these jobs?
+
+## Q5: Skillset vs Income
+
+What is the typical skill set for these jobs? How does it affect the pay rate?
+
+## Q6: Correlation between Industry and Job
+
+Is there a certain correlation between industry and the need for these jobs?
+
+```{marginfigure}
+The following questions are majorly about data science skills, tools and technologies.
+```
+
+## Q7: Languages and IDEs
+
+What programming languages and IDEs do they use?
+
+## Q8: Learning Sources
+
+Where do they get and share the knowledge?
+
+## Q9: Popular Packages
+
+What data science packages do they use?
+
+Survey questions Q14 (visualization libraries), Q16 (machine learning related libraries).
+
+```{r q9-viz}
+viz_lib <- dat %>%
+  select(Q5, starts_with("Q14")) %>%
+  select(-c(Q14_Part_11, Q14_OTHER))
+
+viz_lib <- viz_lib %>%
+  pivot_longer(cols=starts_with("Q14")) %>%
+  select(-name) %>%
+  drop_na() %>%
+  filter(Q5!="Other")
+
+ggplot(viz_lib) +
+  geom_bar(aes(y = value, fill = value)) +
+  facet_wrap(~ Q5) +
+  scale_fill_brewer(palette = "Spectral") +
+  labs(
+    title = "Data science practitioners' favorite visualization libraries",
+    x = "",
+    y = "",
+    caption = glue("Author: celeritasML
+                   Source: Kaggle")
+  ) +
+  theme(
+        axis.ticks.x = element_line(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 6),
+        axis.text.y = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+```
+```{r q9-ml}
+ml_lib <- dat %>%
+  select(Q5, starts_with("Q16")) %>%
+  select(-c(Q16_Part_17, Q16_OTHER))
+
+ml_lib <- ml_lib %>%
+  pivot_longer(cols=starts_with("Q16")) %>%
+  select(-name) %>%
+  drop_na() %>%
+  filter(Q5!="Other")
+
+top_10_ml <- ml_lib %>%
+  group_by(value) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10)
+
+ml_lib <- ml_lib %>%
+  filter(value %in% top_10_ml$value)
+
+ggplot(ml_lib) +
+  geom_bar(aes(y = value, fill = value)) +
+  facet_wrap(~ Q5) +
+  scale_fill_brewer(palette = "Spectral") +
+  labs(
+    title = "Data science practitioners' favorite ML libraries",
+    x = "",
+    y = "",
+    caption = glue("Author: celeritasML
+                   Source: Kaggle")
+  ) +
+  theme(
+        axis.ticks.x = element_line(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 6),
+        axis.text.y = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+```
+
+## Q10: Cloud Computing Platforms Preferences
+
+Will a user's preference for cloud computing platforms affect his or her preference for other tools? For example, we want to know if an AWS EC2 dedicated user will actually prefer AWS S3 over other products.
+
+Survey question Q29-A: computing products (Part_1)
+Survey question Q30: Storage (Part_3, Part_4)
+Survey question Q31-A: ML products (Part_1)
+
+
+$$\chi^2=\sum\frac{(O_i-E_i)^2}{E_i}$$
+
+```{r q10}
+aws_user <- tibble(
+  ec2 = dat$Q29_A_Part_1,
+  s3 = dat$Q30_A_Part_3,
+  efs = dat$Q30_A_Part_4,
+  sagemaker = dat$Q31_A_Part_1,
+  redshift = dat$Q32_A_Part_11,
+  aurora = dat$Q32_A_Part_12,
+  rds = dat$Q32_A_Part_13,
+  dynamodb = dat$Q32_A_Part_14
+  
+) %>%
+  mutate(ec2 = if_else(is.na(ec2), 0, 1),
+         s3 = if_else(is.na(s3), 0, 1),
+         efs = if_else(is.na(efs), 0, 1),
+         sagemaker = if_else(is.na(sagemaker), 0, 1),
+         redshift = if_else(is.na(redshift), 0, 1),
+         aurora = if_else(is.na(aurora), 0, 1),
+         rds = if_else(is.na(rds), 0, 1),
+         dynamodb = if_else(is.na(dynamodb), 0, 1))
+```
+
+```{r q10-a}
+chisq.test(aws_user$ec2, aws_user$s3)
+```
+
+```{r q10-b}
+chisq.test(aws_user$ec2, aws_user$efs)
+```
+
+```{r q10-c}
+chisq.test(aws_user$ec2, aws_user$sagemaker)
+```
+
+
+
+## Q11: AWS vs GCP
+
+What is the overall AWS usage percentage among DS practitioners? Is it the same for Google Cloud?
+
+$H_0: p_A=p_B$, $H_a:p_A\not=p_B$, where $A$ and $B$ can be replaced by AWS, Azure, or GCP, and $n_A$, $n_B$ are sample size of group $A$ and $B$ respectively.
+
+The test statistic (z-statistic) can be calculated as follow:
+
+$$z=\frac{p_A-p_B}{\sqrt{p(1-p)/n_A+p(1-p)/n_B}}$$
+
+```{r q11}
+cloud_comp <- tibble(
+  aws_usage = dat$Q27_A_Part_1,
+  azure_usage = dat$Q27_A_Part_2,
+  gcp_usage = dat$Q27_A_Part_3
+) %>%
+  mutate(aws_usage = if_else(is.na(aws_usage), FALSE, TRUE),
+         azure_usage = if_else(is.na(azure_usage), FALSE, TRUE),
+         gcp_usage = if_else(is.na(gcp_usage), FALSE, TRUE))
+```
+
+```{r q11-a}
+prop.test(c(sum(cloud_comp$aws_usage), sum(cloud_comp$azure_usage)),
+          c(nrow(cloud_comp), nrow(cloud_comp)),
+          alternative = "two.sided",
+          correct = TRUE)
+```
+
+```{r q11-b}
+prop.test(c(sum(cloud_comp$azure_usage), sum(cloud_comp$gcp_usage)),
+          c(nrow(cloud_comp), nrow(cloud_comp)),
+          alternative = "two.sided",
+          correct = TRUE)
+```
+
+```{r q11-c}
+prop.test(c(sum(cloud_comp$gcp_usage), sum(cloud_comp$aws_usage)),
+          c(nrow(cloud_comp), nrow(cloud_comp)),
+          alternative = "two.sided",
+          correct = TRUE)
+```
+
+# Section 4: Conclusions
+
+# Appendix: R scripts
+
+```{r}
+# R scripts here.
+```
+
+See footnote 1[^1].
+
+[^1]: See GitHub repository [tufte](https://github.com/rstudio/tufte).
+
+```{marginfigure}
+Since the same codings will be used in Problem 1-c, I will just use this part as a setup.
+```
