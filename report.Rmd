@@ -19,7 +19,7 @@ options(htmltools.dir.version = FALSE)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
-               ggmosaic)
+               ggmosaic, plotly, stringr, DT)
 
 set.seed(511)
 
@@ -53,6 +53,15 @@ dat <- read_csv(
 
 dat <- dat %>%
   filter(Q3=="United States of America" )
+
+job.dat <- dat %>% 
+    filter(Q5 %in% c("Data Analyst",
+                     "Data Engineer",
+                     "Data Scientist",
+                     "Machine Learning Engineer",
+                     "Software Engineer",
+                     "Statistician",
+                     "Student"))
 ```
 
 # Section 3: The Analysis and Results
@@ -87,9 +96,90 @@ Is there a significant income gap between genders for these jobs?
 
 What is the typical skill set for these jobs? How does it affect the pay rate?
 
+```{r q5-skill}
+skill.set <- job.dat %>% 
+    select(c(Q5, starts_with("Q7_"), starts_with("Q9_"), 
+             starts_with("Q12_"), starts_with("Q14_"),
+             starts_with("Q16_"), starts_with("Q17_"),
+             starts_with("Q18_"), starts_with("Q19_"))) %>%
+    mutate(Total = "TotalHelper") %>%
+    gather("fake_key", "skillset", -Q5, na.rm = T) %>%
+    filter(!skillset %in% c("None", "Other")) %>%
+    rename(title = Q5) %>%
+    count(title, skillset) %>%
+    group_by(title) %>%
+    mutate(prop = round(n / max(n), 3)) %>%
+    filter(prop >= 0.1 & skillset != "TotalHelper") %>%
+    select(-n) %>%
+    arrange(title, desc(prop))
+
+datatable(skill.set, filter = 'top')
+```
+
+
 ## Q6: Correlation between Industry and Job
 
 Is there a certain correlation between industry and the need for these jobs?
+
+```{r q6-ind}
+industry.dat <- job.dat %>%
+    filter(Q5 != "Student") %>%
+    select(Q5, Q20, Q25) %>%
+    filter(Q20 %in% c("Academics/Education", 
+                      "Accounting/Finance", 
+                      "Computers/Technology",
+                      "Insurance/Risk Assessment",
+                      "Medical/Pharmaceutical",
+                      "Online Service/Internet-based Services")) %>%
+    mutate(Q25 = str_remove_all(Q25, "[$,]")) %>%
+    mutate(Q25 = str_replace(Q25, ">1000000", "1000000-2000000")) %>%
+    separate(Q25, into = c("salary_lb", "salary_ub"), sep = "-") %>%
+    mutate(salary_lb = as.numeric(salary_lb)) %>%
+    mutate(salary_ub = as.numeric(salary_ub))
+
+p <- industry.dat %>% 
+    count(Q5, Q20) %>%
+    mutate(Q20 = fct_reorder(Q20, n, .fun="sum")) %>%
+    rename(title=Q5, Industry=Q20, count=n) %>%
+    ggplot(aes(x=Industry, y=count)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    facet_wrap(~ title) +
+    labs(
+        title = "Users' work industry",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+ggplotly(p)
+```
+
+```{r}
+chisq.test(table(industry.dat$Q5, industry.dat$Q20))
+```
+
+
+```{r q6-ind-sal}
+industry.dat %>% 
+    mutate(Q20 = fct_reorder(Q20, salary_lb, .fun='length')) %>%
+    ggplot(aes(x=Q20, y=salary_lb)) +
+    geom_boxplot() +
+    coord_flip() +
+    facet_wrap(~ Q5) +
+    labs(
+        title = "Users' salary vs industry",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+```
+
 
 ```{marginfigure}
 The following questions are majorly about data science skills, tools and technologies.
@@ -99,9 +189,196 @@ The following questions are majorly about data science skills, tools and technol
 
 What programming languages and IDEs do they use?
 
+Survey questions Q7 (daily-used programming language), Q9 (IDE).
+
+```{r q7-lan}
+programming <- job.dat %>% 
+    select(c(Q5, starts_with("Q7_"))) %>%
+    gather("fake_key", "language", -Q5, na.rm = T) %>%
+    rename(title = Q5) %>%
+    select(-fake_key) %>%
+    filter(!language %in% c("None", "Other")) %>%
+    count(title, language, .drop = FALSE) %>% 
+    complete(title, language) %>%
+    replace_na(list(n = 0)) %>%
+    group_by(title) %>%
+    mutate(prop = prop.table(n))
+
+p <- programming %>% 
+    mutate(text = paste0("Language: ", language, "\n", 
+                         "Job title: ", title, "\n", 
+                         "Count: ", n, "\n",
+                         "Proportion: ", round(prop, 3))) %>%
+    ggplot(aes(language, title, fill=prop, text=text)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    labs(
+        title = "Users' favorite programming language",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+ggplotly(p, tooltip="text")
+```
+
+```{r q7-ide}
+ide <- job.dat %>% 
+    select(c(Q5, starts_with("Q9_"))) %>%
+    gather("fake_key", "IDE", -Q5, na.rm = T) %>%
+    rename(title = Q5) %>%
+    select(-fake_key) %>%
+    mutate(IDE = case_when(
+        IDE == "Visual Studio Code (VSCode)" ~ "VSCode",
+        IDE == "Jupyter (JupyterLab, Jupyter Notebooks, etc)" ~ "Jupyter Notebook",
+        TRUE ~ IDE
+    )) %>%
+    filter(!IDE %in% c("None", "Other")) %>%
+    count(title, IDE, .drop = FALSE) %>% 
+    complete(title, IDE) %>%
+    replace_na(list(n = 0)) %>%
+    group_by(title) %>%
+    mutate(prop = prop.table(n))
+
+p <- ide %>% 
+    mutate(text = paste0("IDE: ", IDE, "\n", 
+                         "Job title: ", title, "\n", 
+                         "Count: ", n, "\n",
+                         "Proportion: ", round(prop, 3))) %>%
+    ggplot(aes(IDE, title, fill=prop, text=text)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    labs(
+        title = "Users' favorite IDE",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+ggplotly(p, tooltip="text")
+```
+
 ## Q8: Learning Sources
 
 Where do they get and share the knowledge?
+
+Survey questions Q39 (share and deploy), Q40 (learning resources), Q42 (Media sources).
+
+```{r q8-learn}
+learning_platform <- job.dat %>%
+    select(c(Q5, starts_with("Q40_"))) %>%
+    gather("fake_key", "learning", -Q5, na.rm = T) %>%
+    rename(title = Q5) %>%
+    select(-fake_key) %>%
+    mutate(learning = case_when(
+        learning == "Cloud-certification programs (direct from AWS, Azure, GCP, or similar)" ~ "Cloud-certif Programs",
+        learning == "University Courses (resulting in a university degree)" ~ "University",
+        TRUE ~ learning
+    )) %>%
+    filter(!learning %in% c("None", "Other")) %>%
+    count(title, learning, .drop = FALSE) %>%
+    complete(title, learning) %>%
+    replace_na(list(n = 0)) %>%
+    group_by(title) %>%
+    mutate(prop = prop.table(n))
+
+p <- learning_platform %>%
+    mutate(text = paste0("Platform: ", learning, "\n",
+                         "Job title: ", title, "\n",
+                         "Count: ", n, "\n",
+                         "Proportion: ", round(prop, 3))) %>%
+    ggplot(aes(learning, title, fill=prop, text=text)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    labs(
+        title = "Users' favorite learning platforms",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+ggplotly(p, tooltip="text")
+```
+
+```{r q8-share}
+share_deploy <- job.dat %>% 
+    select(c(Q5, starts_with("Q39_"))) %>%
+    gather("fake_key", "share", -Q5, na.rm = T) %>%
+    rename(title = Q5) %>%
+    select(-fake_key) %>%
+    mutate(share = case_when(
+        share == "I do not share my work publicly" ~ "\'PRIVATE\'",
+        TRUE ~ share
+    )) %>%
+    filter(!share %in% c("Other")) %>%
+    count(title, share, .drop = FALSE) %>% 
+    complete(title, share) %>%
+    replace_na(list(n = 0)) %>%
+    group_by(title) %>%
+    mutate(prop = prop.table(n))
+
+p <- share_deploy %>% 
+    mutate(text = paste0("Platform: ", share, "\n", 
+                         "Job title: ", title, "\n",
+                         "Count: ", n, "\n",
+                         "Proportion: ", round(prop, 3))) %>%
+    ggplot(aes(share, title, fill=prop, text=text)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    labs(
+        title = "Users' favorite share platforms",
+        x = "",
+        y = "",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+ggplotly(p, tooltip="text")
+```
+
+```{r q8-media}
+media_source <- job.dat %>% 
+    select(c(Q5, starts_with("Q42_"))) %>%
+    gather("fake_key", "media", -Q5, na.rm = T) %>%
+    rename(title = Q5) %>%
+    select(-fake_key) %>%
+    filter(!media %in% c("None", "Other")) %>%
+    count(title, media, .drop = FALSE) %>% 
+    complete(title, media) %>%
+    replace_na(list(n = 0)) %>%
+    group_by(title) %>%
+    mutate(prop = prop.table(n)) %>%
+    separate(media, into = c("media", "media_suffix"), sep = " \\(")
+
+p <- media_source %>% 
+    mutate(text = paste0("Platform: ", media, "\n", 
+                         "Job title: ", title, "\n", 
+                         "Count: ", n, "\n", 
+                         "Proportion: ", round(prop, 3))) %>%
+    ggplot(aes(media, title, fill=prop, text=text)) +
+    geom_tile() +
+    scale_fill_gradient(low="white", high="blue") +
+    labs(
+        title = "Users' favorite media source",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle")) +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_text(angle=90, hjust=1),
+          axis.title = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
+ggplotly(p, tooltip="text")
+```
+
 
 ## Q9: Popular Packages
 
