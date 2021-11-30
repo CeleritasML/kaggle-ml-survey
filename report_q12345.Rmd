@@ -8,6 +8,7 @@ output: html_document
 Questionnaire Answer Choices: 
 https://github.com/CeleritasML/kaggle-ml-survey/blob/main/data/supplementary_data/kaggle_survey_2021_answer_choices.pdf
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # invalidate cache when the package version changes
@@ -20,6 +21,7 @@ pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
 
 set.seed(511)
 ```
+
 
 ```{r data cleaning}
 
