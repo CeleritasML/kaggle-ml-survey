@@ -38,7 +38,7 @@ skill.set <- job.dat %>%
     select(-n) %>%
     arrange(title, desc(prop))
 
-datatable(skill.set, filter = 'top')
+datatable(skill.set, filter = 'top', width = 600)
 
 View(skill.set %>% filter(title == "Data Engineer"))
 
