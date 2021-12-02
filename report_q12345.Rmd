@@ -57,13 +57,13 @@ What are the statistics on salaries for these job titles?
 
 The US minimum wage is 7.25 per hour, multiply that for a total $260$ typical number of workdays a year:
 
-$$7.25 \frac{\$}{\text{hour}} \cdot 24 \frac{\text{hours}}{\text{day}} \cdot 260\frac{\text{days}}{\text{year}} = 45240.$$
+$$7.25 \frac{\$}{\text{hour}} \cdot 8 \frac{\text{hours}}{\text{day}} \cdot 260\frac{\text{days}}{\text{year}} = 15080.$$
 
 The new categories* for salaries will be:
 - poverty: below the federal minimum wage
-- low: 40,000 to 79,999
-- medium: 80,000 to 124,999
-- high: 125,000 to 199,999
+- low: 15,000 to 49,999
+- medium: 50,000 to 99,999
+- high: 100,000 to 199,999
 - very high: 200,000 to 499,999
 - highest: >= 500,000
 
@@ -73,10 +73,10 @@ The new categories* for salaries will be:
 ```{r}
 # To change salary categories into FACTOR dtype with descending labels
 poverty   = c("$0-999", "1,000-1,999" , "2,000-2,999", "3,000-3,999", "4,000-4,999", "5,000-7,499", "7,500-9,999",
-             "10,000-14,999", "15,000-19,999", "20,000-24,999", "25,000-29,999", "30,000-39,999") 
-low       = c("40,000-49,999", "50,000-59,999", "60,000-69,999", "70,000-79,999")
-medium    = c("80,000-89,999", "90,000-99,999", "100,000-124,999")
-high      = c("125,000-149,999", "150,000-199,999")
+             "10,000-14,999") 
+low       = c("15,000-19,999", "20,000-24,999", "25,000-29,999", "30,000-39,999", "40,000-49,999")
+medium    = c("50,000-59,999", "60,000-69,999", "70,000-79,999", "80,000-89,999", "90,000-99,999") 
+high      = c("100,000-124,999", "125,000-149,999", "150,000-199,999")
 very_high = c("200,000-249,999", "250,000-299,999", "300,000-499,999")
 highest   = c("$500,000-999,999", ">$1,000,000")
 
@@ -116,6 +116,50 @@ dat[dat$Q5 %in% academia & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
 
 ```
 
+A chi-squared test of independence can be used to test for the statistical significance in the difference in categorical frequencies in each salary category for each job title. On the one hand, the test is done on data-oriented data science roles, see below: 
+
+```{r}
+expectedcounts <- function(A){
+  r <- rowSums(A)
+  c <- colSums(A)
+  N = sum(A)
+  expected <- outer(r,c)/N
+  return(expected)
+}
+
+
+q2_table.1 = table(dat$Q25[dat$Q5 %in% data_side], dat$Q5[dat$Q5 %in% data_side])
+q2_table.df = q2_table.1 %>% as.data.frame() %>% as.tibble()
+q2_expectedcounts <- expectedcounts(q2_table.1) %>% as.data.frame() %>% as.tibble()
+
+ggplot(q2_table.df, aes(x = Var2, y = Freq, fill = Var1)) +
+    geom_col(position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+(chisq.test(q2_table.1, simulate.p.value = T, B = 10000))
+```
+
+Qualitatively, it can be seen that each job title has a seemingly different categorical distribution over the salary brackets. The chi-squared test using simulated p-values reveals that this difference is statistically significant as well with a p-value of $0.0004998$. At an alpha-level of 0.05, the null hypothesis that the frequency of counts over salary brackets is not independent of the job title. 
+
+Because the original salary data is categorical instead of a numerical estimation, a two-sample t-test to test the difference of mean salary is not possible. But the visualization above reveals that for data scientists and data engineers, there are more people in medium and high salary brackets than low salary brackets; the opposite is true for business analyst and data analyst. The visualization alone is able to reveal that "analyst" is considered a more junior role compared to an "engineer" or a "data scientist". There are just too few DBA/Database engineers and statisticians represented in the dataset for a conclusion to be drawn for these categories.
+
+It is also worth noting that most of the highest earning ($>\$500,000$) people in the dataset are data scientists. 
+
+Below, the analysis focuses on the job titles that have more software and product focus, such as machine learning engineer (MLE), software engineer (SWE), and product manager (PM). 
+
+```{r}
+q2_table.2 = table(dat$Q25[dat$Q5 %in% swe_side], dat$Q5[dat$Q5 %in% swe_side])
+q2_table.df2 = q2_table.2 %>% as.data.frame() %>% as.tibble()
+q2_expectedcounts2 <- expectedcounts(q2_table.2) %>% as.data.frame() %>% as.tibble()
+
+ggplot(q2_table.df2, aes(x = Var2, y = Freq, fill = Var1)) +
+    geom_col(position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+(chisq.test(q2_table.2, simulate.p.value = T, B = 10000))
+```
+
+As can be seen above, more MLEs command the highest category of salary than any other job title. The average MLE will earn at or above the medium salary bracket. As for PMs, very few of them ear a low salary; in fact, most of them are in the medium to very high brackets of income. The salary distribution for project managers is similar to that of PMs, except there are significantly more professionals in the low income bracket. Last but not least, most SWEs command a medium to high salary, with still a significant number of professional earning outside this range on both the high end and the lower end. 
 
 ## Q3: Requried Education Levels
 
@@ -136,7 +180,12 @@ ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
 ```
 
 
-### Break down by Industry
+### Break down by Job Title
+
+```{r}
+
+```
+
 
 ## Q4: Gender Gap in Income
 
@@ -153,12 +202,3 @@ Is there a significant income gap between genders for these jobs?
 ### By industry? 
 
 ### By Geographical Location? 
-
-## Q5: Skillset vs Income
-
-### Cloud Computing Chops
-
-### Programming Languages vs salary
-
-
-What is the typical skill set for these jobs? How does it affect the pay rate?
