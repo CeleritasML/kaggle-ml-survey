@@ -20,7 +20,10 @@ output:
 ```{r setup, include=FALSE}
 # invalidate cache when the package version changes
 knitr::opts_chunk$set(cache = TRUE,
-                      tidy = FALSE, 
+                      echo = FALSE,
+                      eval = TRUE,
+                      tidy = FALSE,
+                      warning = FALSE,
                       cache.extra = packageVersion('tidyverse'))
 options(htmltools.dir.version = FALSE)
 
