@@ -130,7 +130,7 @@ chisq.test(table(industry.dat$Q5, industry.dat$Q20))
 
 
 ```{r q6-ind-sal}
-industry.dat %>% 
+p <- industry.dat %>% 
     mutate(Q20 = fct_reorder(Q20, salary_lb, .fun='length')) %>%
     ggplot(aes(x=Q20, y=salary_lb)) +
     geom_boxplot() +
@@ -145,6 +145,7 @@ industry.dat %>%
           axis.title = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
+ggplotly(p, tooltip="text")
 ```
 
 ## Q7: Languages and IDEs
