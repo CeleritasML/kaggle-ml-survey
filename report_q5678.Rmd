@@ -139,7 +139,7 @@ ggplotly(p)
 
 A prop.table version.
 
-```{r}
+```{r q6-ind-table}
 ind.dis <- industry.dat %>% 
     filter(Q5 != "Statistician") %>%
     rename(Title = Q5, Industry = Q20)
@@ -153,7 +153,7 @@ ind.dis %>%
 
 Some hypothesis that use prop.test to examine:  
 
-```{r}
+```{r q6-tests}
 aca.dis <- ind.dis %>% filter(Industry == "Academics")
 com.dis <- ind.dis %>% filter(Industry == "Computers")
 fin.dis <- ind.dis %>% filter(Industry == "Finance")
@@ -197,41 +197,52 @@ my.prop.test2 <- function(ind.dis, title1, title2) {
 }
 ```
 
-(1) $H_a$: Data Analyst is more needed in Academics Industry.
+(1) $H_a$: `Data Analyst` is more needed in `Academics` Industry.
 
-To Computers: `r my.prop.test(aca.dis, com.dis, "Data Analyst")`.  
-To Finance: `r my.prop.test(aca.dis, fin.dis, "Data Analyst")`.  
-To Internet: `r my.prop.test(aca.dis, int.dis, "Data Analyst")`.  
-To Medical:  `r my.prop.test(aca.dis, med.dis, "Data Analyst")`.  
+To `Computers`: `r my.prop.test(aca.dis, com.dis, "Data Analyst")`.  
+To `Finance`: `r my.prop.test(aca.dis, fin.dis, "Data Analyst")`.  
+To `Internet`: `r my.prop.test(aca.dis, int.dis, "Data Analyst")`.  
+To `Medical`:  `r my.prop.test(aca.dis, med.dis, "Data Analyst")`.
 
-(2) $H_a$: Data Scientist is more needed in Medical Industry.
+**TRUE**, `Data Analyst` is more needed in `Academics` Industry.
 
-To Academics: `r my.prop.test(med.dis, aca.dis, "Data Scientist")`.  
-To Computers: `r my.prop.test(med.dis, com.dis, "Data Scientist")`.  
-To Finance: `r my.prop.test(med.dis, fin.dis, "Data Scientist")`.  
-To Internet: `r my.prop.test(med.dis, int.dis, "Data Scientist")`.  
+(2) $H_a$: `Data Scientist` is more needed in `Medical` Industry.
 
-(3) $H_a$: Software Engineer is more needed in Computers Industry.
+To `Academics`: `r my.prop.test(med.dis, aca.dis, "Data Scientist")`.  
+To `Computers`: `r my.prop.test(med.dis, com.dis, "Data Scientist")`.  
+To `Finance`: `r my.prop.test(med.dis, fin.dis, "Data Scientist")`.  
+To `Internet`: `r my.prop.test(med.dis, int.dis, "Data Scientist")`.  
 
-To Academics: `r my.prop.test(com.dis, aca.dis, "Software Engineer")`.  
-To Finance: `r my.prop.test(com.dis, fin.dis, "Software Engineer")`.  
-To Internet: `r my.prop.test(com.dis, int.dis, "Software Engineer")`.  
-To Medical:`r my.prop.test(com.dis, med.dis, "Software Engineer")`.  
+**FALSE**, `Data Analyst` has similar demand in these industries.
 
-(4) $H_a$: Machine Learning Engineer is more needed in Internet Industry.
+(3) $H_a$: `Software Engineer` is more needed in `Computers` Industry.
 
-To Academics: `r my.prop.test(com.dis, aca.dis, "Machine Learning Engineer")`.  
-To Computers: `r my.prop.test(med.dis, com.dis, "Machine Learning Engineer")`.  
-To Finance: `r my.prop.test(com.dis, fin.dis, "Machine Learning Engineer")`.  
-To Medical: `r my.prop.test(com.dis, med.dis, "Machine Learning Engineer")`.  
+To `Academics`: `r my.prop.test(com.dis, aca.dis, "Software Engineer")`.  
+To `Finance`: `r my.prop.test(com.dis, fin.dis, "Software Engineer")`.  
+To `Internet`: `r my.prop.test(com.dis, int.dis, "Software Engineer")`.  
+To `Medical`:`r my.prop.test(com.dis, med.dis, "Software Engineer")`.  
 
-(5) $H_a$: Overall, Data Scientist is more needed than other jobs.
+**TRUE**, `Software Engineer` is more needed in `Computers` Industry.
 
-To Data Analyst: `r my.prop.test2(ind.dis, "Data Scientist", "Data Analyst")`.  
-To Data Engineer: `r my.prop.test2(ind.dis, "Data Scientist", "Data Engineer")`.  
-To Software Engineer: `r my.prop.test2(ind.dis, "Data Scientist", "Software Engineer")`.  
-To ML Engineer: `r my.prop.test2(ind.dis, "Data Scientist", "Machine Learning Engineer")`.  
+(4) $H_a$: `Machine Learning Engineer` is more needed in `Internet` Industry.
 
+To `Academics`: `r my.prop.test(com.dis, aca.dis, "Machine Learning Engineer")`.  
+To `Computers`: `r my.prop.test(med.dis, com.dis, "Machine Learning Engineer")`.  
+To `Finance`: `r my.prop.test(com.dis, fin.dis, "Machine Learning Engineer")`.  
+To `Medical`: `r my.prop.test(com.dis, med.dis, "Machine Learning Engineer")`.  
+
+**FALSE**, The demand of `Machine Learning Engineer` in `Internet` Industry is not significantly greater than in `Academics` and `Computers`.
+
+(5) $H_a$: Overall, `Data Scientist` is more needed than other jobs.
+
+To `Data Analyst`: `r my.prop.test2(ind.dis, "Data Scientist", "Data Analyst")`.  
+To `Data Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Data Engineer")`.  
+To `Software Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Software Engineer")`.  
+To `ML Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Machine Learning Engineer")`.  
+
+**TRUE**, `Data Scientist` is more needed than other 4 jobs.
+
+Salaries for these jobs vary widely from industry to industry.
 
 ```{r q6-ind-sal}
 p <- industry.dat %>% 
@@ -258,6 +269,13 @@ ggplotly(p, tooltip="text")
 What programming languages and IDEs do they use?
 
 Survey questions Q7 (daily-used programming language), Q9 (IDE).
+
+In the heatmap of programming language below, some trends can be found:
+
+ - `Python`, `R`, and `SQL` are three most popular language in Kaggle community.
+ - `Statisticians` use `R` more than `Python` and `SQL`.
+ - `C++`, `Java`, `Javascript` are mainly used by `Software Engineer`.
+ - `Julia` and `Swift` are barely used by Kaggle users.
 
 ```{r q7-lan}
 programming <- job.dat %>% 
@@ -291,6 +309,13 @@ p <- programming %>%
           panel.grid.minor = element_blank())
 ggplotly(p, tooltip="text")
 ```
+
+In the heatmap of IDE below, some trends can be found:
+
+ - `Jupyter Notebook` is the most popular IDE for Kaggle users.
+ - `MATLAB` is barely used in the industry(last 5 jobs).
+ - `Statisticians` use `RStudio` the most.
+ - `VSCode` is overall the second common-used IDE.
 
 ```{r q7-ide}
 ide <- job.dat %>% 
@@ -330,11 +355,48 @@ p <- ide %>%
 ggplotly(p, tooltip="text")
 ```
 
+From two plots above, while Python becomes the most popular programming language for Kaggle users, Jupyter Notebook (a Python IDE) also becomes the most commonly used IDE. Are there any correlation between them?
+
+```{r q7-py-jupyter}
+pj.dat <- job.dat %>% 
+        select(c(Q5, Q7_Part_1, Q9_Part_1, Q9_Part_11)) %>% 
+        rename(Title = Q5) %>%
+        mutate(Python = !is.na(Q7_Part_1),
+               Jupyter = !is.na(Q9_Part_1) | !is.na(Q9_Part_11)) %>%
+        select(Title, Python, Jupyter) %>%
+        pivot_longer(cols = c(Python, Jupyter)) %>%
+        filter(value == TRUE)
+py.ju.test <- function(excludes) {
+    pj.t.dat <- pj.dat %>% filter(!Title %in% excludes)
+    print(table(pj.t.dat$name, pj.t.dat$Title))
+    pj.t.res <- chisq.test(pj.t.dat$name, pj.t.dat$Title, 
+                           simulate.p.value = T)
+    return(paste0("X-squared = ", round(pj.t.res$statistic, 1), 
+                  ", p-value = ", round(pj.t.res$p.value, 2),
+                  if_else(pj.t.res$p.value < 0.05, ", H0 rejected", 
+                          ", can't reject H0")))
+}
+table(pj.dat$Title, pj.dat$name)
+```
+
+$H_a$: The distribution of Python is significantly different from the distribution of Jupyter Notebook.
+
+All job titles: `r py.ju.test(c())`.  
+Without `Statistician`: `r py.ju.test(c("Statistician"))`.  
+Without `Statistician`, `Student`: `r py.ju.test(c("Statistician", "Student"))`.  
+
+**FALSE**. There is no significant difference between the distribution of Python and the distribution of Jupyter Notebook among jobs. In the other words, most people who use Python also use Jupyter Notebook as the IDE.
+
 ## Q8: Learning Sources
 
 Where do they get and share the knowledge?
 
 Survey questions Q39 (share and deploy), Q40 (learning resources), Q42 (Media sources).
+
+In the heatmap of learning platform below, some trends can be found:
+
+ - `Coursera` is the most popular learning platform outside the University.
+ - `Statisticans` learn knowledge mainly from `University` course.
 
 ```{r q8-learn}
 learning_platform <- job.dat %>%
@@ -373,6 +435,14 @@ p <- learning_platform %>%
           panel.grid.minor = element_blank())
 ggplotly(p, tooltip="text")
 ```
+
+In the heatmap of sharing platform below, some trends can be found:
+
+ - `GitHub` is the most popular sharing platform.
+ - `Kaggle`, `Colab`, `Personal Blog` are used by a small proportion of Kaggle Users.
+ - Other platforms listed on the questionare are barely used by Kaggle Users.
+ - A large proportion of people don't share their works to public.
+ - None of `Student` answered this question.
 
 ```{r q8-share}
 share_deploy <- job.dat %>% 
@@ -413,6 +483,11 @@ p <- share_deploy %>%
 ggplotly(p, tooltip="text")
 ```
 
+In the heatmap of media source below, some trends can be found:
+
+ - `Blog`, `Kaggle`, `YouTube` are three most popular media source.
+ - Many `Statisticians` use `Journal Publication` as their media sources.
+
 ```{r q8-media}
 media_source <- job.dat %>% 
     select(c(Q5, starts_with("Q42_"))) %>%
@@ -447,6 +522,14 @@ p <- media_source %>%
 ggplotly(p, tooltip="text")
 ```
 
+Special Job Title: `Statistician`
 
+From all analysis above, `Statistician` shows many different preference than other jobs. For example:
 
+ - Only a few people identify themselves as `Statistician`.
+ - They mostly work in `Academic` industry.
+ - They use `R` more frequently, also they use `RStudio` a lot.
+ - They learn most knowledge from `University Courses`.
+ - Many of them use `Journal Publication` to get report on data science topics.
 
+Based on these features, `Statisticians` are very likely to be a job title specially for professors and researchers in academic institutions (i.e. universities). 
