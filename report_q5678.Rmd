@@ -2,18 +2,26 @@
 title: "report_q5678"
 author: "Jingsong, GAO"
 date: "2021/12/4"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: lumen
+    highlight: kate
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 # invalidate cache when the package version changes
-knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tidyverse'))
 options(htmltools.dir.version = FALSE)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
-               ggmosaic, DT, plotly)
+               DT, plotly, extrafont)
 
 ggplot2::theme_set(
   theme_fivethirtyeight() +
@@ -60,6 +68,8 @@ job.dat <- dat %>%
 
 What is the typical skill set for these jobs? How does it affect the pay rate?
 
+Here the key skill is defined as a skill that has been acquired more than 10% people under certain job title.
+
 ```{r q5-skill}
 skill.set <- job.dat %>% 
     filter(Q5 != "Other") %>%
@@ -77,17 +87,17 @@ skill.set <- job.dat %>%
     summarise(n = n(), 
               salary_mean = round(mean(salary_lb, na.rm = T)),
               salary_sd = round(sd(salary_lb, na.rm = T)),
-              ) %>%
+              .groups = "drop") %>%
     group_by(title) %>%
-    mutate(prop = round(n / max(n), 3)) %>%
+    mutate(prop = round(n * 100 / max(n), 1)) %>%
     filter(prop >= 0.1) %>%
     select(-n) %>%
     arrange(title, desc(prop))
 
-datatable(skill.set, filter = 'top', width = 600)
+datatable(skill.set, filter = 'top', width = 800)
 ```
 
-Here the key skill is defined as a skill that has been acquired more than 10% people under certain job title. From the table, huge salary variances make it impossible to tell whether a skill will increase the salary or not. 
+From the table, huge salary variances make it impossible to tell whether a skill will increase the salary or not. 
 
 ## Q6: Correlation between Industry and Job
 
@@ -97,12 +107,16 @@ Is there a certain correlation between industry and the need for these jobs?
 industry.dat <- job.dat %>%
     filter(Q5 != "Student") %>%
     select(Q5, Q20, salary_lb, salary_ub) %>%
-    filter(Q20 %in% c("Academics/Education", 
-                      "Accounting/Finance", 
-                      "Computers/Technology",
-                      "Insurance/Risk Assessment",
-                      "Medical/Pharmaceutical",
-                      "Online Service/Internet-based Services"))
+    mutate(Q20 = case_when(
+        Q20 == "Academics/Education" ~ "Academics",
+        Q20 == "Accounting/Finance" ~ "Finance", 
+        Q20 == "Computers/Technology" ~ "Computers",
+        Q20 == "Medical/Pharmaceutical" ~ "Medical",
+        Q20 == "Online Service/Internet-based Services" ~ "Internet",
+        TRUE ~ Q20
+    )) %>%
+    filter(Q20 %in% c("Academics", "Finance", "Computers",
+                      "Medical", "Internet"))
 
 p <- industry.dat %>% 
     count(Q5, Q20) %>%
@@ -117,20 +131,111 @@ p <- industry.dat %>%
         caption = glue("Author: celeritasML
                    Source: Kaggle")) +
     theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_text(angle=90, hjust=1),
           axis.title = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
 ggplotly(p)
 ```
 
+A prop.table version.
+
 ```{r}
-chisq.test(table(industry.dat$Q5, industry.dat$Q20))
+ind.dis <- industry.dat %>% 
+    filter(Q5 != "Statistician") %>%
+    rename(Title = Q5, Industry = Q20)
+ind.dis %>%
+    group_by(Industry) %>%
+    count(Title) %>%
+    mutate(Proportion = round(prop.table(n), 3)) %>%
+    select(-n) %>%
+    pivot_wider(names_from = Industry, values_from = Proportion)
 ```
+
+Some hypothesis that use prop.test to examine:  
+
+```{r}
+aca.dis <- ind.dis %>% filter(Industry == "Academics")
+com.dis <- ind.dis %>% filter(Industry == "Computers")
+fin.dis <- ind.dis %>% filter(Industry == "Finance")
+int.dis <- ind.dis %>% filter(Industry == "Internet")
+med.dis <- ind.dis %>% filter(Industry == "Medical")
+
+ds.dis <- ind.dis %>% filter(Title == "Data Scientist")
+da.dis <- ind.dis %>% filter(Title == "Data Analyst")
+de.dis <- ind.dis %>% filter(Title == "Data Engineer")
+
+my.prop.test <- function(target.dis, other.dis, title) {
+    target <- sum(target.dis$Title == title)
+    other <- sum(other.dis$Title == title)
+    t.res <- prop.test(c(target, other),
+          c(nrow(target.dis), nrow(other.dis)),
+          alternative = "greater",
+          correct = TRUE)
+    return(paste0("X-squared = ", round(t.res$statistic,1), 
+                  ", p-value = ", formatC(t.res$p.value, 
+                                          format = "e", digits = 2),
+                  ", 95% CI = (", round(t.res$conf.int[1], 2), 
+                  ", ", round(t.res$conf.int[2], 2),"), ",
+                  if_else(t.res$p.value < 0.05, "H0 rejected", 
+                          "can't reject H0")))
+}
+
+my.prop.test2 <- function(ind.dis, title1, title2) {
+    target <- sum(ind.dis$Title == title1)
+    other <- sum(ind.dis$Title == title2)
+    t.res <- prop.test(c(target, other),
+          c(nrow(ind.dis), nrow(ind.dis)),
+          alternative = "greater",
+          correct = TRUE)
+    return(paste0("X-squared = ", round(t.res$statistic,1), 
+                  ", p-value = ", formatC(t.res$p.value, 
+                                          format = "e", digits = 2),
+                  ", 95% CI = (", round(t.res$conf.int[1], 2), 
+                  ", ", round(t.res$conf.int[2], 2),"), ",
+                  if_else(t.res$p.value < 0.05, "H0 rejected", 
+                          "can't reject H0")))
+}
+```
+
+(1) $H_a$: Data Analyst is more needed in Academics Industry.
+
+To Computers: `r my.prop.test(aca.dis, com.dis, "Data Analyst")`.  
+To Finance: `r my.prop.test(aca.dis, fin.dis, "Data Analyst")`.  
+To Internet: `r my.prop.test(aca.dis, int.dis, "Data Analyst")`.  
+To Medical:  `r my.prop.test(aca.dis, med.dis, "Data Analyst")`.  
+
+(2) $H_a$: Data Scientist is more needed in Medical Industry.
+
+To Academics: `r my.prop.test(med.dis, aca.dis, "Data Scientist")`.  
+To Computers: `r my.prop.test(med.dis, com.dis, "Data Scientist")`.  
+To Finance: `r my.prop.test(med.dis, fin.dis, "Data Scientist")`.  
+To Internet: `r my.prop.test(med.dis, int.dis, "Data Scientist")`.  
+
+(3) $H_a$: Software Engineer is more needed in Computers Industry.
+
+To Academics: `r my.prop.test(com.dis, aca.dis, "Software Engineer")`.  
+To Finance: `r my.prop.test(com.dis, fin.dis, "Software Engineer")`.  
+To Internet: `r my.prop.test(com.dis, int.dis, "Software Engineer")`.  
+To Medical:`r my.prop.test(com.dis, med.dis, "Software Engineer")`.  
+
+(4) $H_a$: Machine Learning Engineer is more needed in Internet Industry.
+
+To Academics: `r my.prop.test(com.dis, aca.dis, "Machine Learning Engineer")`.  
+To Computers: `r my.prop.test(med.dis, com.dis, "Machine Learning Engineer")`.  
+To Finance: `r my.prop.test(com.dis, fin.dis, "Machine Learning Engineer")`.  
+To Medical: `r my.prop.test(com.dis, med.dis, "Machine Learning Engineer")`.  
+
+(5) $H_a$: Overall, Data Scientist is more needed than other jobs.
+
+To Data Analyst: `r my.prop.test2(ind.dis, "Data Scientist", "Data Analyst")`.  
+To Data Engineer: `r my.prop.test2(ind.dis, "Data Scientist", "Data Engineer")`.  
+To Software Engineer: `r my.prop.test2(ind.dis, "Data Scientist", "Software Engineer")`.  
+To ML Engineer: `r my.prop.test2(ind.dis, "Data Scientist", "Machine Learning Engineer")`.  
 
 
 ```{r q6-ind-sal}
 p <- industry.dat %>% 
+    filter(salary_lb != 1000000) %>%
     mutate(Q20 = fct_reorder(Q20, salary_lb, .fun='length')) %>%
     ggplot(aes(x=Q20, y=salary_lb)) +
     geom_boxplot() +
@@ -141,7 +246,7 @@ p <- industry.dat %>%
         caption = glue("Author: celeritasML
                    Source: Kaggle")) +
     theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_text(angle=90, hjust=1),
+          axis.text.x = element_blank(),
           axis.title = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
@@ -174,7 +279,7 @@ p <- programming %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(language, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite programming language",
         caption = glue("Author: celeritasML
@@ -212,7 +317,7 @@ p <- ide %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(IDE, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite IDE",
         caption = glue("Author: celeritasML
@@ -256,7 +361,7 @@ p <- learning_platform %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(learning, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite learning platforms",
         caption = glue("Author: celeritasML
@@ -293,7 +398,7 @@ p <- share_deploy %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(share, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite share platforms",
         x = "",
@@ -329,7 +434,7 @@ p <- media_source %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(media, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite media source",
         caption = glue("Author: celeritasML
