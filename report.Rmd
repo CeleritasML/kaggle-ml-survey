@@ -7,24 +7,31 @@ author:
   - Rui Qiu, rq47@georgetown.edu
 date: "`r Sys.Date()`"
 output:
-  tufte::tufte_html:
-    # tufte_variant: "envisioned"
+  html_document:
+    toc: true
+    toc_float: true
+    toc_collapsed: true
+    toc_depth: 3
+    number_sections: true
+    theme: lumen
     highlight: kate
 ---
 
 ```{r setup, include=FALSE}
 # invalidate cache when the package version changes
-knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+knitr::opts_chunk$set(cache = TRUE,
+                      tidy = FALSE, 
+                      cache.extra = packageVersion('tidyverse'))
 options(htmltools.dir.version = FALSE)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
-               ggmosaic, plotly, stringr, DT)
+               hrbrthemes, plotly, stringr, DT, extrafont)
 
 set.seed(511)
 
 ggplot2::theme_set(
-  theme_fivethirtyeight() +
+    theme_fivethirtyeight() +
     theme(
         text = element_text(family = "Roboto Condensed"),
         title = element_text(size = 14),
@@ -35,6 +42,10 @@ ggplot2::theme_set(
         panel.grid.minor.x = element_blank()
     )
 )
+```
+
+```{marginfigure}
+Since the same codings will be used in Problem 1-c, I will just use this part as a setup.
 ```
 
 # Section 1: Introduction
@@ -282,7 +293,7 @@ p <- programming %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(language, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite programming language",
         caption = glue("Author: celeritasML
@@ -320,7 +331,7 @@ p <- ide %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(IDE, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite IDE",
         caption = glue("Author: celeritasML
@@ -364,7 +375,7 @@ p <- learning_platform %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(learning, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite learning platforms",
         caption = glue("Author: celeritasML
@@ -401,7 +412,7 @@ p <- share_deploy %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(share, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite share platforms",
         x = "",
@@ -437,7 +448,7 @@ p <- media_source %>%
                          "Proportion: ", round(prop, 3))) %>%
     ggplot(aes(media, title, fill=prop, text=text)) +
     geom_tile() +
-    scale_fill_gradient(low="white", high="blue") +
+    scale_fill_gradient(low="white", high="royalblue") +
     labs(
         title = "Users' favorite media source",
         caption = glue("Author: celeritasML
@@ -527,6 +538,8 @@ ggplot(ml_lib) +
         panel.grid.minor = element_blank())
 ```
 
+- [ ] Some conditional probabilities as findings.
+
 ## Q10: Cloud Computing Platforms Preferences
 
 Will a user's preference for cloud computing platforms affect his or her preference for other tools? For example, we want to know if an AWS EC2 dedicated user will actually prefer AWS S3 over other products.
@@ -572,11 +585,11 @@ chisq.test(aws_user$ec2, aws_user$efs)
 chisq.test(aws_user$ec2, aws_user$sagemaker)
 ```
 
+- [ ] add a table or something else.
 
+## Q11: AWS, Azure and GCP
 
-## Q11: AWS vs GCP
-
-What is the overall AWS usage percentage among DS practitioners? Is it the same for Google Cloud?
+What is the overall AWS usage percentage among DS practitioners? Is it the same for Google Cloud? What about Microsoft Azure?
 
 $H_0: p_A=p_B$, $H_a:p_A\not=p_B$, where $A$ and $B$ can be replaced by AWS, Azure, or GCP, and $n_A$, $n_B$ are sample size of group $A$ and $B$ respectively.
 
@@ -616,18 +629,32 @@ prop.test(c(sum(cloud_comp$gcp_usage), sum(cloud_comp$aws_usage)),
           correct = TRUE)
 ```
 
+- explain
+- CI
+
+
 # Section 4: Conclusions
+
+- findings as bullet points:
+
+1. We don't have a one-sentence conclusion to summarize all the findings above. However, what we learned from this project is more about...
+2. gender inequality
+3. ...
+
+- Besides the loose collection of findings above, we believe that (ML/cloud computing) is the general trend of data science in the next couple of years.
+
+- More to discover from the survey data. Comparison with historical data blah blah blah.
+
+- Limitation. (from our proposal, last paragraph). Kaggle users != ds practitioners; lots of students -> not representative enough to reflect the reality in the industry.
+
+
+
 
 # Appendix: R scripts
 
-```{r}
-# R scripts here.
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
 
 See footnote 1[^1].
 
 [^1]: See GitHub repository [tufte](https://github.com/rstudio/tufte).
-
-```{marginfigure}
-Since the same codings will be used in Problem 1-c, I will just use this part as a setup.
-```
