@@ -145,7 +145,7 @@ Because the original salary data is categorical instead of a numerical estimatio
 
 It is also worth noting that most of the highest earning ($>\$500,000$) people in the dataset are data scientists. 
 
-Below, the analysis focuses on the job titles that have more software and product focus, such as machine learning engineer (MLE), software engineer (SWE), and product manager (PM). 
+Below, the analysis focuses on the job titles that have a focus on software and product management, such as machine learning engineer (MLE), software engineer (SWE), and product manager (PM). 
 
 ```{r}
 q2_table.2 = table(dat$Q25[dat$Q5 %in% swe_side], dat$Q5[dat$Q5 %in% swe_side])
@@ -179,26 +179,89 @@ ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
     theme_void() 
 ```
 
+```{r}
+Q3_temp <- sort(table(dat$Q4), decreasing = T)
+(Q3_temp <- Q3_temp / sum(Q3_temp))
+```
 
-### Break down by Job Title
+
+At an aggregate level, it is evident that more than half of the data science community on Kaggle has a degree that is above the undergraduate level. Combining percentages of people with a master's degree or a doctoral degree (including a professional doctoral degree) gives us that $64.7/%$ of respondents hold a graduate degree. For the combination of programming skill level requirements, as well as the mount of requisite knowledge in statistics machine learning, this is an expected phenomenon. 
+
+### Most professional data scientists have a master's degree or above:
 
 ```{r}
+edu.1 <- sort(table(dat[dat$Q5 == "Data Scientist",]$Q4), decreasing = T) %>% 
+    as.data.frame() %>%
+    as.tibble()
+edu.1 <- rename(edu.1, `Degree` = Var1)
 
+ggplot(edu.1, aes(x="", y=Freq, fill=`Degree`)) +
+    geom_bar(stat="identity", width=1, color="white") +
+    coord_polar("y", start=0) + 
+    theme_void() 
+```
+
+### The same doesn't necessary go for software engineering or 
+
+```{r}
+EDU <- table(dat$Q5, dat$Q4) %>% 
+    as.data.frame() %>%
+    as.tibble()
+EDU <- rename(EDU, `Job Title` = Var1)
+EDU <- rename(EDU, `Degree` = Var2)
+
+ggplot(EDU, aes(x="", y=Freq, fill=`Degree`)) +
+    geom_bar(stat="identity", width=1, color="white") +
+    coord_polar("y", start=0) + 
+    theme_void() + 
+    facet_wrap(vars(`Job Title`), ncol = 5) + 
+    ggtitle("Pie Chart of Degrees by Each Job Title") + 
+    theme(legend.position = "bottom")
+```
+
+
+
+
+```{r}
+print_pie_chart <- function(job){
+    edu <- sort(table(dat[dat$Q5 == job,]$Q4), decreasing = T) %>% 
+        as.data.frame() %>%
+        as.tibble()
+    edu <- rename(edu, `Degree` = Var1)
+    print(ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
+        geom_bar(stat="identity", width=1, color="white") +
+        coord_polar("y", start=0) + 
+        ggtitle(job) +
+        theme_void())
+}
+jobs <- unique(dat$Q5)
+for (job in jobs){
+    if (job %in% c(swe_side,data_side)){
+        print_pie_chart(job)
+    }
+}
 ```
 
 
 ## Q4: Gender Gap in Income
 
-Is there a significant income gap between genders for these jobs?
+Is there a significant income gap between men and women for these jobs?
 
 ### What about at an aggregate level? 
 ```{r}
-
+table(dat$Q2, dat$Q25)
 ```
 
+As seen above at an aggregate level, for salary levels high and above there are a total of 799 men and only 143 women. The gender map is apparent. 
 
 ### By groups aggregated depending on years of experience? 
 
-### By industry? 
+```{r}
+for (agegroup in unique(dat$Q6)){
+    if (agegroup != "I have never written code"){
+        print(agegroup)
+        print(table(dat$Q2[dat$Q6 == agegroup], dat$Q25[dat$Q6 == agegroup]))
+    }
+}
+```
 
-### By Geographical Location? 
