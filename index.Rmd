@@ -1010,7 +1010,7 @@ There are more to be discovered depending on the perspectives.
 
 ## The Loyalty to AWS
 
-As the demand for computational power increases along with the amount of data involved in data science industry, cloud computing is a topic that any data science practitioners cannot avoid. The market is majorly occupied by **Amazon, Google** and **Microsoft**.
+It is clear to see that cloud computing is the general trend of data science in the past couple of years. And it is predictable to be still prevailing in the future years to come, especially the concept of "metaverse" is brewing some new possibilities that require cloud computation as their foundations. The market is majorly occupied by **Amazon, Google** and **Microsoft**. 
 
 Specifically, will a user's preference for a cloud computing platforms affect his or her preferences for other tools? For example, an AWS EC2 dedicated user will actually prefer AWS S3 over other products.
 
@@ -1245,11 +1245,15 @@ In general, this linear model is built upon lots of compromising assumptions, so
 
 > Note that since this project covers various aspects of data science including background information, tool preferences and so on, the conclusion cannot be summarized into one sentence. However, there are still many takeaways:
 
-1. item
-2. item
-3. item
-
-- Besides the loose collection of findings above, it is clear to see that cloud computing is the general trend of data science in the past couple of years. And it is predictable to be still prevailing in the future years to come, especially the concept of "metaverse" is brewing some new possibilities that require cloud computation as their foundations.
+- Similar job titles don’t mean the same salary expectations. By salary standards, data scientist is a more senior role than data analysts and data engineers.
+- Women are extremely underrepresented in the highest earning DS jobs. 
+- Graduate degree holders (MS, PhD, JD, MD) are the majority in the DS community. The only exceptions in terms of job title are data engineers and software engineering. 
+- Learn Python, R, and SQL, the industry favors Python over R, but R is quite popular among academics.
+- Take courses at Coursera, Udacity, Udemy, also at University 
+- Share your work on GitHub
+- Blog, Kaggle, YouTube are good sources of data science information
+- Both Python and R have extensive amount of useful packages in terms of visualization and machine learning. 
+- Pick a cloud computing platform and learn its products of your interest. AWS is highly recommended.
 
 ## Limitations
 
