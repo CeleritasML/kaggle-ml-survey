@@ -10,7 +10,7 @@ output:
   html_document:
     toc: true
     toc_float: true
-    toc_collapsed: true
+    toc_collapsed: false
     toc_depth: 3
     number_sections: true
     theme: lumen
@@ -52,11 +52,11 @@ ggplot2::theme_set(
 Since the same codings will be used in Problem 1-c, I will just use this part as a setup.
 ```
 
-# Section 1: Introduction
+# Introduction
 
 Address the data science problem
 
-# Section 2: Data Cleaning
+# Data Cleaning
 
 ```{r pkg, message=FALSE}
 col_names <- names(read_csv(
@@ -84,19 +84,15 @@ job.dat <- dat %>%
     mutate(salary_ub = as.numeric(salary_ub))
 ```
 
-# Section 3: The Analysis and Results
+# The Analysis and Results
 
-- List of questions.
+- [ ] List of questions.
 
-```{marginfigure}
 Since the one large data science problem can be divided into several smaller bits, we decide to combine the analysis and the interpretation sections together. And the questions will be addressed and discussed one by one.
-```
 
-```{marginfigure}
 The following questions are about data science career paths.
-```
 
-## Q1: Job Titles Distributions
+## Job Titles Distributions
 
 What percentage of the survey respondents are working under these job titles? 
 
@@ -114,7 +110,7 @@ ggplot(jtitle, aes(x="", y=Freq, fill=`Job Title`)) +
     theme_void() 
 ```
 
-## Q2: Salaries
+## Salaries
 
 What are the statistics on salaries for these job titles?
 
@@ -226,7 +222,7 @@ ggplot(q2_table.df2, aes(x = Var2, y = Freq, fill = Var1)) +
 
 As can be seen above, more MLEs command the highest category of salary than any other job title. The average MLE will earn at or above the medium salary bracket. As for PMs, very few of them ear a low salary; in fact, most of them are in the medium to very high brackets of income. The salary distribution for project managers is similar to that of PMs, except there are significantly more professionals in the low income bracket. Last but not least, most SWEs command a medium to high salary, with still a significant number of professional earning outside this range on both the high end and the lower end. 
 
-## Q3: Requried Education Levels
+## Requried Education Levels
 
 What levels of education are required for these job titles?
 
@@ -277,13 +273,13 @@ EDU <- table(dat$Q5, dat$Q4) %>%
 EDU <- rename(EDU, `Job Title` = Var1)
 EDU <- rename(EDU, `Degree` = Var2)
 
-ggplot(EDU, aes(x="", y=Freq, fill=`Degree`)) +
-    geom_bar(stat="identity", width=1, color="white") +
-    coord_polar("y", start=0) + 
-    theme_void() + 
-    facet_wrap(vars(`Job Title`), ncol = 5) + 
-    ggtitle("Pie Chart of Degrees by Each Job Title") + 
-    theme(legend.position = "bottom")
+# ggplot(EDU, aes(x="", y=Freq, fill=`Degree`)) +
+#     geom_bar(stat="identity", width=1, color="white") +
+#     coord_polar("y", start=0) + 
+#     theme_void() + 
+#     facet_wrap(vars(`Job Title`), ncol = 5) + 
+#     ggtitle("Pie Chart of Degrees by Each Job Title") + 
+#     theme(legend.position = "bottom")
 ```
 
 ```{r q3-d}
@@ -299,14 +295,12 @@ print_pie_chart <- function(job){
         theme_void())
 }
 jobs <- unique(dat$Q5)
-for (job in jobs){
-    if (job %in% c(swe_side,data_side)){
-        print_pie_chart(job)
-    }
-}
+
+print_pie_chart("Software Engineer")
+print_pie_chart("Data Engineer")
 ```
 
-## Q4: Gender Gap in Income
+## Gender Gap in Income
 
 Is there a significant income gap between genders for these jobs?
 
@@ -330,7 +324,7 @@ for (agegroup in unique(dat$Q6)){
 }
 ```
 
-## Q5: Skillset vs Income
+## Skillset vs Income
 
 What is the typical skill set for these jobs? How does it affect the pay rate?
 
@@ -367,7 +361,7 @@ datatable(skill.set, filter = 'top', width = 800)
 
 From the table, huge salary variances make it very hard to tell whether a skill will increase the salary or not. 
 
-## Q6: Correlation between Industry and Job
+## Correlation between Industry and Job
 
 Is there a certain correlation between industry and the need for these jobs?
 
@@ -534,7 +528,7 @@ p <- industry.dat %>%
 ggplotly(p, tooltip="text")
 ```
 
-## Q7: Languages and IDEs
+## Languages and IDEs
 
 What programming languages and IDEs do they use?
 
@@ -659,7 +653,7 @@ Without `Statistician`, `Student`: `r py.ju.test(c("Statistician", "Student"))`.
 
 **FALSE**. There is no significant difference between the distribution of Python and the distribution of Jupyter Notebook among jobs. In the other words, most people who use Python also use Jupyter Notebook as the IDE.
 
-## Q8: Learning Sources
+## Learning Sources
 
 Where do they get and share the knowledge?
 
@@ -808,7 +802,7 @@ From all analysis above, `Statistician` shows many different preference than oth
 
 Based on these features, `Statisticians` are very likely to be a job title specially for professors and researchers in academic institutions (i.e. universities). 
 
-## Q9: Popular Packages
+## Popular Packages
 
 As for the popular packages, one can easily give some examples that no strangers to data science practitioners. But the real problem is, what can be learned from this? Some conditional probabilities will highlight the findings.
 
@@ -940,7 +934,7 @@ $$
 
 There are more to be discovered depending on the perspectives.
 
-## Q10: Cloud Computing Platforms Preferences
+## Cloud Computing Platforms Preferences
 
 As the demand for computational power increases along with the amount of data involved in data science industry, cloud computing is a topic that any data science practitioners cannot avoid. The major
 
@@ -993,7 +987,7 @@ chisq.test(aws_user$ec2, aws_user$sagemaker)
 
 - [ ] add a table or something else.
 
-## Q11: AWS, Azure and GCP
+## AWS, Azure and GCP
 
 What is the overall AWS usage percentage among DS practitioners? Is it the same for Google Cloud? What about Microsoft Azure?
 
@@ -1040,7 +1034,7 @@ prop.test(c(sum(cloud_comp$gcp_usage), sum(cloud_comp$aws_usage)),
 - explain
 - CI
 
-## Q12 Linear Regression on Salary
+## Linear Regression on Salary
 
 Honestly speaking, the best way to approach this question is to apply a logistic regression on the the dependent variable `salary` due to its categorical nature. However, in order to experiment a linear model, we take a bold move to transform the `salary` back to continuous by randomly sampling values in between the pay levels. Three typical languages used by data science practitioners are included as well: Python, R and SQL.
 
@@ -1120,7 +1114,7 @@ anova(model2)
 ```
 
 
-# Section 4: Conclusions
+# Conclusions
 
 - findings as bullet points:
 
@@ -1129,12 +1123,8 @@ anova(model2)
 3. ...
 
 - Besides the loose collection of findings above, we believe that (ML/cloud computing) is the general trend of data science in the next couple of years.
-
 - More to discover from the survey data. Comparison with historical data blah blah blah.
-
 - Limitation. (from our proposal, last paragraph). Kaggle users != ds practitioners; lots of students -> not representative enough to reflect the reality in the industry.
-
-
 
 
 # Appendix: R scripts
