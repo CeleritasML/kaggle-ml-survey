@@ -83,7 +83,18 @@ job.dat <- dat %>%
 
 This research draws data from the 2021 Kaggle Machine Learning & Data Science Survey conducted anonymously among the Kaggle community from 09/01/2021 to 10/04/2021. The dataset consists of 25,973 valid responses to the survey questionnaire encompassing 42 questions about personal background and preference on programming language, IDE, cloud service, computing hardware, database, machine learning package, workflow. Due to the nature of this data science story, a subset of data will be sliced as the data of interest.
 
-- [ ] Insert cleaning steps.
+To give a more precise view of the data science and machine learning community, the scale of research is narrowed down to only Kaggle users from the United States of America. As a result, 2650 responses(10.2%) are selected from the origin dataset.
+
+Also, some non-relevant or too-specific questions are removed from the dataset, and only 21 questions(50%) are used in the analysis below.
+
+The next step of data cleaning is removing NA values. In the questionnaire, some questions can only choose single answer and some questions allow to choose multiple answers. For single-answered questions, NA value means the question is not answered by respondent, i.e. all students didn't answer the question about salary. For multiple-answers question, NA value means the option is not selected by respondent, i.e. in the question about programming languages, users didn't select all listed answers.
+
+Besides that, some special answers are treated as not useful and removed. The first one is OTHER which means the answer is not specified, and the second one is NONE which means none of the answers above is applicable for the respondent.
+
+The origin responses of salary are categorical with 27 classes having format like `$150,000-199,999`, so two different approach to transform the salary are done. 
+
+ - Aggregation: the categorical salaries are grouped into 6 levels `{poverty, low, medium, high, very high, highest}`.  
+ - String Split: the categorical salaries are separated into two columns `{lower bound, upper bound}`.
 
 # Statistical Questions and Methods
 
@@ -1232,19 +1243,19 @@ In general, this linear model is built upon lots of compromising assumptions, so
 
 # Conclusions
 
+> Note that since this project covers various aspects of data science including background information, tool preferences and so on, the conclusion cannot be summarized into one sentence. However, there are still many takeaways:
+
+1. item
+2. item
+3. item
+
+- Besides the loose collection of findings above, it is clear to see that cloud computing is the general trend of data science in the past couple of years. And it is predictable to be still prevailing in the future years to come, especially the concept of "metaverse" is brewing some new possibilities that require cloud computation as their foundations.
+
+## Limitations
+
 Admittedly, Kaggle is a popular data science learning community with a focus on machine learning competition, its user group is representative enough to reflect a partial status quo of data science practitioners in the industry. In addition, one should keep in mind that not all data science professionals are keen on participating in machine learning competitions while working “nine to five”.
-Nevertheless, the survey still manages to give us a snapshot of what a data science practitioner’s career looks like, especially in a post-pandemic era. Hopefully, it could provide some guidance to graduate students in the States who are pursuing data science-related careers.
 
-- findings as bullet points:
-
-1. We don't have a one-sentence conclusion to summarize all the findings above. However, what we learned from this project is more about...
-2. gender inequality
-3. ...
-
-- Besides the loose collection of findings above, we believe that (ML/cloud computing) is the general trend of data science in the next couple of years.
-- More to discover from the survey data. Comparison with historical data blah blah blah.
-- Limitation. (from our proposal, last paragraph). Kaggle users != ds practitioners; lots of students -> not representative enough to reflect the reality in the industry.
-
+Nevertheless, the survey still manages to give the audience a snapshot of what a data science practitioner’s career looks like, especially in a post-pandemic era. Hopefully, it could provide some guidance to graduate students in the States who are pursuing data science-related careers.
 
 # Appendix: R scripts
 
