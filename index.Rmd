@@ -7,8 +7,7 @@ author:
   - Rui Qiu, rq47@georgetown.edu
 date: "`r Sys.Date()`"
 output:
-  rmdformats::robobook
-  # rmdformats::readthedown
+  rmdformats::readthedown
 ---
 
 ```{r setup, include=FALSE}
@@ -44,9 +43,17 @@ ggplot2::theme_set(
 
 # Introduction
 
-Address the data science problem
+Each year, Kaggle conducts an annual worldwide survey among active users to provide a comprehensive view of the data science (DS) and machine learning (ML) community[^1]. After preliminary cleaning, a total of 25,973 responses were recorded for analysis. Following the survey, Kaggle hosts an annual Data Science Survey Challenge that awards top notebook authors who tell a rich story about a subset of the DS and ML community. 
 
-# Data Cleaning
+For this project, the goal is to tell a data science story about data science professionals working in the United States. The raised questions pertain to comparing and contrasting job titles that fall within the general umbrella of data science, such as data scientist, data analyst, machine learning engineer, statistician. The key features with which to tell the data science story include but are not limited to salary, preferences on programming languages and environments, hardware/cloud utilization, diversity, and inclusion. Not only are these interesting questions to ask, but they also provide insights for fellow students in *Data Science and Analytics program*[^2] at Georgetown University to narrow down job search.
+
+
+[^1]: [2021 Kaggle Machine Learning & Data Science Survey](https://www.kaggle.com/c/kaggle-survey-2021).
+
+[^2]: [Master of Science in Data Science and Analytics](https://analytics.georgetown.edu/).
+
+
+# Data and Cleaning
 
 ```{r pkg, message=FALSE}
 col_names <- names(read_csv(
@@ -74,13 +81,34 @@ job.dat <- dat %>%
     mutate(salary_ub = as.numeric(salary_ub))
 ```
 
+This research draws data from the 2021 Kaggle Machine Learning & Data Science Survey conducted anonymously among the Kaggle community from 09/01/2021 to 10/04/2021. The dataset consists of 25,973 valid responses to the survey questionnaire encompassing 42 questions about personal background and preference on programming language, IDE, cloud service, computing hardware, database, machine learning package, workflow. Due to the nature of this data science story, a subset of data will be sliced as the data of interest.
+
+- [ ] Insert cleaning steps.
+
+# Statistical Questions and Methods
+
+Data science is a broad and interdisciplinary field. As a result, there is a lot of variation in the day-to-day responsibilities, workflows, skill sets, and salaries for jobs related to data science. The rough idea is to do some key comparisons among the following job titles: data analyst, data engineer, data scientist, machine learning engineer, software engineer, statistician. Preliminarily, these are the questions of interests regarding career paths, with proposed analytical methods in parentheses:
+
+1. What percentage of the survey respondents are working under these job titles? (EDA)
+2. What are the statistics on salaries for these job titles? (EDA, ANOVA, hypothesis testing)
+3. What levels of education are required for these job titles? (EDA)
+4. Is there a significant income gap between genders for these jobs? (EDA, hypothesis testing)
+5. What is the typical skill set for these jobs? How does it affect the pay rate? (regression, ANOVA)
+6. Is there a certain correlation between industry and the need for these jobs? (EDA, bootstrap, hypothesis testing)
+
+Additionally, it is also worth investigating the requisite skillsets for each of the data science careers as guidance to our program cohort on which skills and technologies to focus the career preparation on. The inquiry includes but is not limited to the following questions:
+
+1. What programming languages and IDEs do they use? (hypothesis test on the two-way table)
+2. Where do they get and share the knowledge? (EDA)
+3. What data science packages do they use? (EDA)
+4. Are they using cloud computing tools? What are their preferences? Will a user’s preference for cloud computing platforms affect his or her preference for big data products/cloud storage products? (Hypothesis testing)
+5. What is the overall AWS usage percentage among DS practitioners? Is it the same for Google Cloud? (Law of Large Numbers, two proportions Z-test.)
+
 # The Analysis and Results
 
-- [ ] List of questions.
+> Since the one large data science problem can be divided into several smaller bits, it is practical to combine the analysis and the interpretation sections together. And the questions will be addressed and discussed one by one.
 
-Since the one large data science problem can be divided into several smaller bits, we decide to combine the analysis and the interpretation sections together. And the questions will be addressed and discussed one by one.
-
-The following questions are about data science career paths.
+**The following questions are about data science career paths.**
 
 ## Job Titles Distributions
 
@@ -97,7 +125,12 @@ jtitle <- rename(jtitle, `Job Title` = Var1)
 ggplot(jtitle, aes(x="", y=Freq, fill=`Job Title`)) +
     geom_bar(stat="identity", width=1, color="white") +
     coord_polar("y", start=0) + 
-    theme_void() 
+    theme_void()+
+    labs(
+        title = "Job Title Distributions",
+        subtitle = "US respondents in Kaggle's annual survey",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
 ```
 
 ## Salaries
@@ -148,7 +181,12 @@ dat[dat$Q5 %in% data_side & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
     geom_count() + 
     ggtitle("Two-Way Salary Visualizations: Data-Oriented Jobs") +
     xlab("") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    labs(
+        y = "salary",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.title = element_blank())
 
 
 dat[dat$Q5 %in% swe_side & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
@@ -156,14 +194,24 @@ dat[dat$Q5 %in% swe_side & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
     geom_count() + 
     ggtitle("Two-Way Salary Visualizations: Engineering-Oriented Jobs") +
     xlab("") + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    labs(
+        y = "salary",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.title = element_blank())
 
 dat[dat$Q5 %in% academia & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
   ggplot( aes(x=Q5, y=Q25, color = Q5)) +
     geom_count() + 
     ggtitle("Two-Way Salary Visualizations: Academic Jobs and Others") +
     xlab("") + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    labs(
+        y = "salary",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.title = element_blank())
 
 ```
 
@@ -185,7 +233,12 @@ q2_expectedcounts <- expectedcounts(q2_table.1) %>% as.data.frame() %>% as.tibbl
 
 ggplot(q2_table.df, aes(x = Var2, y = Freq, fill = Var1)) +
     geom_col(position = "dodge") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+        title = "Histogram of Salary",
+        subtitle = "data-oriented data science roles",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
 
 (chisq.test(q2_table.1, simulate.p.value = T, B = 10000))
 ```
@@ -205,7 +258,12 @@ q2_expectedcounts2 <- expectedcounts(q2_table.2) %>% as.data.frame() %>% as.tibb
 
 ggplot(q2_table.df2, aes(x = Var2, y = Freq, fill = Var1)) +
     geom_col(position = "dodge") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+        title = "Histogram of Salary",
+        subtitle = "software and product management related data science roles",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
 
 (chisq.test(q2_table.2, simulate.p.value = T, B = 10000))
 ```
@@ -229,7 +287,12 @@ edu <- rename(edu, `Degree` = Var1)
 ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
     geom_bar(stat="identity", width=1, color="white") +
     coord_polar("y", start=0) + 
-    theme_void() 
+    theme_void() +
+    labs(
+        title = "Pie Chart of Education Level",
+        subtitle = "US respondents in Kaggle's annual survey",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
 ```
 
 ```{r q3-a}
@@ -251,7 +314,12 @@ edu.1 <- rename(edu.1, `Degree` = Var1)
 ggplot(edu.1, aes(x="", y=Freq, fill=`Degree`)) +
     geom_bar(stat="identity", width=1, color="white") +
     coord_polar("y", start=0) + 
-    theme_void() 
+    theme_void() +
+    labs(
+        title = "Pie Chart of Education Level",
+        subtitle = "Subset of Data Scientists",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
 ```
 
 ### The same doesn't necessary go for software engineering
@@ -281,8 +349,12 @@ print_pie_chart <- function(job){
     print(ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
         geom_bar(stat="identity", width=1, color="white") +
         coord_polar("y", start=0) + 
-        ggtitle(job) +
-        theme_void())
+        theme_void()) +
+        labs(
+          title = "Pie Chart of Education Level",
+          subtitle = glue("Subset of ", job),
+          caption = glue("Author: celeritasML
+                     Source: Kaggle"))
 }
 jobs <- unique(dat$Q5)
 
@@ -405,7 +477,7 @@ ind.dis %>%
     pivot_wider(names_from = Industry, values_from = Proportion)
 ```
 
-Some hypothesis that use prop.test to examine:  
+Some hypothesis that use `prop.test` to examine:  
 
 ```{r q6-tests}
 aca.dis <- ind.dis %>% filter(Industry == "Academics")
@@ -915,10 +987,11 @@ $$
 
 $$
 \begin{split}
-P(\text{Python}|\text{Visualization}) &= (33+115+96+80+1247+525+861)/3923 \approx 0.7538\\ 
-P(\text{R}|\text{Visualization}) &= (132+622+80+525+212)/3923 \approx 0.4005\\
-P(\text{Python}|\text{Machine Learning}) &= (132+549+187+93+527+1125+666+506)/4038 \approx 0.9373\\ 
-P(\text{R}|\text{Machine Learning}) &= (148+549+187+93+666+105+506)/4038 \approx 0.5582\\
+P(\text{Python}|\text{Visualization}) &= (33+115+96+80+1247+525+861)/3923 \\
+&\approx 0.7538\\ 
+P(\text{R}|\text{Visualization}) &= (132+622+80+525+212)/3923 \\&\approx 0.4005\\
+P(\text{Python}|\text{Machine Learning}) &= (132+549+187+93+527+1125+666+506)/4038 \\&\approx 0.9373\\ 
+P(\text{R}|\text{Machine Learning}) &= (148+549+187+93+666+105+506)/4038 \\&\approx 0.5582\\
 \end{split}
 $$
 
@@ -986,7 +1059,7 @@ chisq.test(aws_user$ec2, aws_user$efs)
 chisq.test(aws_user$ec2, aws_user$sagemaker)
 ```
 
-Since all three p-values are significantly smaller than the common critical value 0.05, that means the null hypothesis is rejected. That means the user group of EC2 and all three AWS services' user groups (S3, EFS and SageMaker) are not dependent.
+Since all three p-values are significantly smaller than the common critical value 0.05, that means the null hypothesis is rejected. That means the user group of EC2 and all three AWS services' user groups (S3, EFS and SageMaker) are not independent.
 
 A possible explanation is that EC2 is the core service of AWS, and most of other AWS services rely on running an elastic computing instance. That implies a data science practitioner who frequently uses EC2 will be more likely to use other AWS services.
 
@@ -1116,7 +1189,7 @@ lm_dat <- lm_dat %>%
          sql = if_else(is.na(sql), 0, 1))
 ```
 
-Afterwards, the function `MASS:stepAIC()` is used to do a stepwise regression in order to find the suitable predictive variables. Note that the selection criterion is AIC, and the model starts with the maximal model with all the predictors and some manually added interactions, including:
+Afterwards, the function `MASS::stepAIC()` is used to do a stepwise regression in order to find the suitable predictive variables. Note that the selection criterion is AIC, and the model starts with the maximal model with all the predictors and some manually added interactions, including:
 
 - Interactions between languages, `sql:r`, `sql:python`, `r:python`, `python:r:sql`.
 - Interactions between jobs and languages, `job:sql`, `job:r`, `job:python`.
@@ -1159,6 +1232,9 @@ In general, this linear model is built upon lots of compromising assumptions, so
 
 # Conclusions
 
+Admittedly, Kaggle is a popular data science learning community with a focus on machine learning competition, its user group is representative enough to reflect a partial status quo of data science practitioners in the industry. In addition, one should keep in mind that not all data science professionals are keen on participating in machine learning competitions while working “nine to five”.
+Nevertheless, the survey still manages to give us a snapshot of what a data science practitioner’s career looks like, especially in a post-pandemic era. Hopefully, it could provide some guidance to graduate students in the States who are pursuing data science-related careers.
+
 - findings as bullet points:
 
 1. We don't have a one-sentence conclusion to summarize all the findings above. However, what we learned from this project is more about...
@@ -1174,7 +1250,3 @@ In general, this linear model is built upon lots of compromising assumptions, so
 
 ```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
-
-See footnote 1[^1].
-
-[^1]: See GitHub repository [tufte](https://github.com/rstudio/tufte).
