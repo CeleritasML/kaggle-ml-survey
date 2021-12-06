@@ -29,7 +29,8 @@ options(htmltools.dir.version = FALSE)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
-               hrbrthemes, plotly, stringr, DT, extrafont)
+               hrbrthemes, plotly, stringr, DT, extrafont,
+               tidymodels)
 
 set.seed(511)
 
@@ -112,7 +113,7 @@ What are the statistics on salaries for these job titles?
 
 The US minimum wage is 7.25 per hour, multiply that for a total $260$ typical number of workdays a year:
 
-$$7.25 \frac{\$}{\text{hour}} \cdot 24 \frac{\text{hours}}{\text{day}} \cdot 260\frac{\text{days}}{\text{year}} = 45240.$$
+$$7.25 \frac{\$}{\text{hour}} \cdot 24 \frac{\text{hour}}{\text{day}} \cdot 260\frac{\text{day}}{\text{year}} = \$45240/\text{year}.$$
 
 The new categories* for salaries will be:
 - poverty: below the federal minimum wage
@@ -467,11 +468,15 @@ ggplotly(p, tooltip="text")
 
 ## Q9: Popular Packages
 
-What data science packages do they use?
+As for the popular packages, one can easily give some examples that no strangers to data science practitioners. But the real problem is, what can be learned from this? Some conditional probabilities will highlight the findings.
 
-Survey questions Q14 (visualization libraries), Q16 (machine learning related libraries).
+The data is a subset of survey answer to Q14 and Q16, which emphasize on visualization libraries and machine learning related libraries respectively. A set of niche job titles are excluded due to limited number of responses, such as "DBA/Database Engineer", "Currently not employed" and "Statistician." The remaining valid responses are visualized as barplots by group to show the count of responses that are familiar with those packages.
+
+Additionally, as the number of machine learning libraries covered in the survey exceeds a reasonable number of meaning palette colors, only the top 10 libraries are kept in the visualization.
 
 ```{r q9-viz}
+# Q9
+
 viz_lib <- dat %>%
   select(Q5, starts_with("Q14")) %>%
   select(-c(Q14_Part_11, Q14_OTHER))
@@ -480,14 +485,17 @@ viz_lib <- viz_lib %>%
   pivot_longer(cols=starts_with("Q14")) %>%
   select(-name) %>%
   drop_na() %>%
-  filter(Q5!="Other")
+  filter(!(Q5 %in% c("Other", "DBA/Database Engineer",
+                   "Developer Relations/Advocacy",
+                   "Currently not employed",
+                   "Statistician", "Product Manager")))
 
 ggplot(viz_lib) +
   geom_bar(aes(y = value, fill = value)) +
   facet_wrap(~ Q5) +
   scale_fill_brewer(palette = "Spectral") +
   labs(
-    title = "Data science practitioners' favorite visualization libraries",
+    title = "Data science practitioners' favorite viz libraries",
     x = "",
     y = "",
     caption = glue("Author: celeritasML
@@ -510,7 +518,10 @@ ml_lib <- ml_lib %>%
   pivot_longer(cols=starts_with("Q16")) %>%
   select(-name) %>%
   drop_na() %>%
-  filter(Q5!="Other")
+  filter(!(Q5 %in% c("Other", "DBA/Database Engineer",
+                   "Developer Relations/Advocacy",
+                   "Currently not employed",
+                   "Statistician", "Product Manager")))
 
 top_10_ml <- ml_lib %>%
   group_by(value) %>%
@@ -541,9 +552,57 @@ ggplot(ml_lib) +
         panel.grid.minor = element_blank())
 ```
 
-- [ ] Some conditional probabilities as findings.
+There are some obvious results worth mentioning. But before that, it is important to reiterate that the comparison is based on the calculation of some conditional probabilities according to Bayes' Theorem.
+
+$$P(A|B) = \frac{P(B|A)\cdot P(A)}{P(B)} = \frac{P(A \cap  B)}{P(B)}$$
+
+where $A$ and $B$ are events.
+
+```{r}
+viz_lib %>%
+  group_by(Q5) %>%
+  table() %>%
+  addmargins() %>%
+  print()
+
+ml_lib %>%
+  group_by(Q5) %>%
+  table() %>%
+  addmargins() %>%
+  print()
+```
+
+- Both **Data Scientists** and **Students** are the two major respondents to package preferences/familiarity questions.
+
+$$
+\begin{split}
+  P(\text{Student}|\text{Visualization}) &= \frac{739}{3923} \approx 0.1884\\
+  P(\text{Data Scientist}|\text{Visualization}) &= \frac{1165}{3923} \approx 0.2970 \\
+  P(\text{Student}|\text{Machine Learning}) &=\frac{732}{4038} \approx 0.1813\\
+  P(\text{Data Scientist}|\text{Machine Learning}) &=\frac{1364}{4038} \approx 0.3378
+\end{split}
+$$
+
+- Python-related packages or packages with Python support are overall more popular among the responses.
+  - For example, `Altair`, `bokeh`, `geoplotlib`, `leaflet/folium`, `matplotlib`, `plotly/plotly express`, `seaborn` are categorized as Python-wise, while `D3.js`, `ggplot2`, `leaflet/folium`, `plotly/plotly express` and `shiny` are categorized as R-wise. Note that there are some overlapping among these packages since they do have multiple language support.
+  - Similarly, `Huggingface`, `Keras`, `LightGBM`, `Prophet`, `PyTorch`, `scikit-learn`, `TensorFlow`, `Xgboost` are Python compatible. `Caret`, `Keras`, `LightGBM`, `Prophet`, `TensorFlow`, `tidymodels` and `Xgboost` and usable in R.
+
+$$
+\begin{split}
+P(\text{Python}|\text{Visualization}) &= (33+115+96+80+1247+525+861)/3923 \approx 0.7538\\ 
+P(\text{R}|\text{Visualization}) &= (132+622+80+525+212)/3923 \approx 0.4005\\
+P(\text{Python}|\text{Machine Learning}) &= (132+549+187+93+527+1125+666+506)/4038 \approx 0.9373\\ 
+P(\text{R}|\text{Machine Learning}) &= (148+549+187+93+666+105+506)/4038 \approx 0.5582\\
+\end{split}
+$$
+
+There are more to be discovered depending on the perspectives.
 
 ## Q10: Cloud Computing Platforms Preferences
+
+As the demand for computational power increases along with the amount of data involved in data science industry, cloud computing is a topic that any data science practitioners cannot avoid. The major
+
+Specifically, will a user's preference for a cloud computing platforms affect his or her preferences for other tools?
 
 Will a user's preference for cloud computing platforms affect his or her preference for other tools? For example, we want to know if an AWS EC2 dedicated user will actually prefer AWS S3 over other products.
 
@@ -555,6 +614,8 @@ Survey question Q31-A: ML products (Part_1)
 $$\chi^2=\sum\frac{(O_i-E_i)^2}{E_i}$$
 
 ```{r q10}
+# Q10
+
 aws_user <- tibble(
   ec2 = dat$Q29_A_Part_1,
   s3 = dat$Q30_A_Part_3,
@@ -601,6 +662,8 @@ The test statistic (z-statistic) can be calculated as follow:
 $$z=\frac{p_A-p_B}{\sqrt{p(1-p)/n_A+p(1-p)/n_B}}$$
 
 ```{r q11}
+# Q11
+
 cloud_comp <- tibble(
   aws_usage = dat$Q27_A_Part_1,
   azure_usage = dat$Q27_A_Part_2,
@@ -634,6 +697,85 @@ prop.test(c(sum(cloud_comp$gcp_usage), sum(cloud_comp$aws_usage)),
 
 - explain
 - CI
+
+## Q12 Linear Regression on Salary
+
+Honestly speaking, the best way to approach this question is to apply a logistic regression on the the dependent variable `salary` due to its categorical nature. However, in order to experiment a linear model, we take a bold move to transform the `salary` back to continuous by randomly sampling values in between the pay levels. Three typical languages used by data science practitioners are included as well: Python, R and SQL.
+
+```{r q12-lm}
+# Q12
+
+lm_dat <- dat %>%
+  select(Q1, Q2, Q4, Q5, Q6,
+         Q7_Part_1, Q7_Part_2, Q7_Part_3,
+         Q25) %>%
+  drop_na(Q25) %>%
+  rename(age_group = Q1,
+         gender = Q2,
+         education = Q4,
+         job = Q5,
+         experience = Q6,
+         salary = Q25,
+         python = Q7_Part_1,
+         r = Q7_Part_2,
+         sql = Q7_Part_3)
+
+set.seed(511)
+
+# - poverty: below the federal minimum wage
+# - low: 40,000 to 79,999
+# - medium: 80,000 to 124,999
+# - high: 125,000 to 199,999
+# - very high: 200,000 to 499,999
+# - highest: >= 500,000
+
+lm_dat <- lm_dat %>%
+  rowwise() %>%
+  mutate(salary = case_when(
+    salary == "poverty" ~ sample(1:39999, 1),
+    salary == "low" ~ sample(40000:79999, 1),
+    salary == "medium" ~ sample(80000:124999, 1),
+    salary == "high" ~ sample(125000:199999, 1),
+    salary == "very high" ~ sample(200000:499999, 1),
+    salary == "highest" ~ sample(500000:2000000, 1)
+  )) %>%
+  ungroup()
+
+ggplot(lm_dat, aes(x=salary)) +
+  geom_histogram() +
+  labs(
+        title = "Histogram of salaries",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
+
+ggplot(lm_dat, aes(x=log(salary))) +
+  geom_histogram() +
+  labs(
+        title = "Histogram of log(salary)",
+        caption = glue("Author: celeritasML
+                   Source: Kaggle"))
+
+lm_dat <- lm_dat %>%
+  mutate(python = if_else(is.na(python), 0, 1),
+         r = if_else(is.na(r), 0, 1),
+         sql = if_else(is.na(sql), 0, 1))
+```
+
+```{r q12-lm-model}
+model1 <- lm(log(salary) ~ . + sql:r + sql:python + r:python + python:r:sql +
+               job:sql + job:r + job:python + job:experience +
+               job:education, data=lm_dat)
+MASS::stepAIC(model1)
+```
+
+Besides `summary()` table,
+
+```{r q12-final-model}
+model2 <- lm(log(salary) ~ age_group + gender + education + job + experience + 
+    python + sql + python:sql, data = lm_dat)
+
+anova(model2)
+```
 
 
 # Section 4: Conclusions
