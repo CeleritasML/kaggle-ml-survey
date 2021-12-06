@@ -37,7 +37,3 @@ ggplot2::theme_set(
 )
 ```
 
-## EDA
-
-This [link](https://www.kaggle.com/paultimothymooney/2021-kaggle-data-science-machine-learning-survey) contains an exploring data analysis of the kaggle survey dataset.
-
