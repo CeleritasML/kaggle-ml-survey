@@ -76,7 +76,12 @@ job.dat <- dat %>%
                      "Machine Learning Engineer",
                      "Software Engineer",
                      "Statistician",
-                     "Student"))
+                     "Student")) %>%
+    mutate(Q25 = str_remove_all(Q25, "[$,]")) %>%
+    mutate(Q25 = str_replace(Q25, ">1000000", "1000000-2000000")) %>%
+    separate(Q25, into = c("salary_lb", "salary_ub"), sep = "-") %>%
+    mutate(salary_lb = as.numeric(salary_lb)) %>%
+    mutate(salary_ub = as.numeric(salary_ub))
 ```
 
 # Section 3: The Analysis and Results
@@ -96,6 +101,8 @@ The following questions are about data science career paths.
 What percentage of the survey respondents are working under these job titles? 
 
 ```{r q1-job}
+# Q1
+
 jtitle <- sort(table(dat$Q5), decreasing = T) %>% 
     as.data.frame() %>%
     as.tibble()
@@ -113,27 +120,30 @@ What are the statistics on salaries for these job titles?
 
 The US minimum wage is 7.25 per hour, multiply that for a total $260$ typical number of workdays a year:
 
-$$7.25 \frac{\$}{\text{hour}} \cdot 24 \frac{\text{hour}}{\text{day}} \cdot 260\frac{\text{day}}{\text{year}} = \$45240/\text{year}.$$
+$$7.25 \frac{\$}{\text{hour}} \cdot 8 \frac{\text{hours}}{\text{day}} \cdot 260\frac{\text{days}}{\text{year}} = 15080.$$
 
 The new categories* for salaries will be:
 - poverty: below the federal minimum wage
-- low: 40,000 to 79,999
-- medium: 80,000 to 124,999
-- high: 125,000 to 199,999
+- low: 15,000 to 49,999
+- medium: 50,000 to 99,999
+- high: 100,000 to 199,999
 - very high: 200,000 to 499,999
 - highest: >= 500,000
 
 *loosely based on US federal income tax brackets. 
 
-```{r q2-salary}
+
+```{r q2}
+# Q2
+
 # To change salary categories into FACTOR dtype with descending labels
-poverty   <- c("$0-999", "1,000-1,999" , "2,000-2,999", "3,000-3,999", "4,000-4,999", "5,000-7,499", "7,500-9,999",
-             "10,000-14,999", "15,000-19,999", "20,000-24,999", "25,000-29,999", "30,000-39,999") 
-low       <- c("40,000-49,999", "50,000-59,999", "60,000-69,999", "70,000-79,999")
-medium    <- c("80,000-89,999", "90,000-99,999", "100,000-124,999")
-high      <- c("125,000-149,999", "150,000-199,999")
-very_high <- c("200,000-249,999", "250,000-299,999", "300,000-499,999")
-highest   <- c("$500,000-999,999", ">$1,000,000")
+poverty   = c("$0-999", "1,000-1,999" , "2,000-2,999", "3,000-3,999", "4,000-4,999", "5,000-7,499", "7,500-9,999",
+             "10,000-14,999") 
+low       = c("15,000-19,999", "20,000-24,999", "25,000-29,999", "30,000-39,999", "40,000-49,999")
+medium    = c("50,000-59,999", "60,000-69,999", "70,000-79,999", "80,000-89,999", "90,000-99,999") 
+high      = c("100,000-124,999", "125,000-149,999", "150,000-199,999")
+very_high = c("200,000-249,999", "250,000-299,999", "300,000-499,999")
+highest   = c("$500,000-999,999", ">$1,000,000")
 
 dat$Q25[dat$Q25 %in% poverty] <- "poverty"
 dat$Q25[dat$Q25 %in% low] <- "low"
@@ -141,7 +151,7 @@ dat$Q25[dat$Q25 %in% medium] <- "medium"
 dat$Q25[dat$Q25 %in% high] <- "high"
 dat$Q25[dat$Q25 %in% very_high] <- "very high"
 dat$Q25[dat$Q25 %in% highest] <- "highest"
-dat$Q25 <- factor(dat$Q25, levels = c("poverty", "low", "medium", "high", "very high", "highest"), ordered = T)
+dat$Q25 = factor(dat$Q25, levels = c("poverty", "low", "medium", "high", "very high", "highest"), ordered = T)
 
 data_side <- c("Data Scientist", "Data Analyst", "Business Analyst", "Data Engineer", "Statistician", "DBA/Database Engineer")
 swe_side <- c("Software Engineer", "Machine Learning Engineer", "Program/Project Manager", "Product Manager") 
@@ -168,60 +178,215 @@ dat[dat$Q5 %in% academia & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
     ggtitle("Two-Way Salary Visualizations: Academic Jobs and Others") +
     xlab("") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 ```
+
+A chi-squared test of independence can be used to test for the statistical significance in the difference in categorical frequencies in each salary category for each job title. On the one hand, the test is done on data-oriented data science roles, see below: 
+
+```{r q2-a}
+expectedcounts <- function(A){
+  r <- rowSums(A)
+  c <- colSums(A)
+  N = sum(A)
+  expected <- outer(r,c)/N
+  return(expected)
+}
+
+
+q2_table.1 = table(dat$Q25[dat$Q5 %in% data_side], dat$Q5[dat$Q5 %in% data_side])
+q2_table.df = q2_table.1 %>% as.data.frame() %>% as.tibble()
+q2_expectedcounts <- expectedcounts(q2_table.1) %>% as.data.frame() %>% as.tibble()
+
+ggplot(q2_table.df, aes(x = Var2, y = Freq, fill = Var1)) +
+    geom_col(position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+(chisq.test(q2_table.1, simulate.p.value = T, B = 10000))
+```
+
+Qualitatively, it can be seen that each job title has a seemingly different categorical distribution over the salary brackets. The chi-squared test using simulated p-values reveals that this difference is statistically significant as well with a p-value of $0.0004998$. At an alpha-level of 0.05, the null hypothesis that the frequency of counts over salary brackets is not independent of the job title. 
+
+Because the original salary data is categorical instead of a numerical estimation, a two-sample t-test to test the difference of mean salary is not possible. But the visualization above reveals that for data scientists and data engineers, there are more people in medium and high salary brackets than low salary brackets; the opposite is true for business analyst and data analyst. The visualization alone is able to reveal that "analyst" is considered a more junior role compared to an "engineer" or a "data scientist". There are just too few DBA/Database engineers and statisticians represented in the dataset for a conclusion to be drawn for these categories.
+
+It is also worth noting that most of the highest earning ($>\$500,000$) people in the dataset are data scientists. 
+
+Below, the analysis focuses on the job titles that have a focus on software and product management, such as machine learning engineer (MLE), software engineer (SWE), and product manager (PM). 
+
+```{r q2-b}
+q2_table.2 = table(dat$Q25[dat$Q5 %in% swe_side], dat$Q5[dat$Q5 %in% swe_side])
+q2_table.df2 = q2_table.2 %>% as.data.frame() %>% as.tibble()
+q2_expectedcounts2 <- expectedcounts(q2_table.2) %>% as.data.frame() %>% as.tibble()
+
+ggplot(q2_table.df2, aes(x = Var2, y = Freq, fill = Var1)) +
+    geom_col(position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+(chisq.test(q2_table.2, simulate.p.value = T, B = 10000))
+```
+
+As can be seen above, more MLEs command the highest category of salary than any other job title. The average MLE will earn at or above the medium salary bracket. As for PMs, very few of them ear a low salary; in fact, most of them are in the medium to very high brackets of income. The salary distribution for project managers is similar to that of PMs, except there are significantly more professionals in the low income bracket. Last but not least, most SWEs command a medium to high salary, with still a significant number of professional earning outside this range on both the high end and the lower end. 
 
 ## Q3: Requried Education Levels
 
 What levels of education are required for these job titles?
 
+### Aggregate Level
+
+```{r q3}
+# Q3
+
+edu <- sort(table(dat$Q4), decreasing = T) %>% 
+    as.data.frame() %>%
+    as.tibble()
+edu <- rename(edu, `Degree` = Var1)
+
+ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
+    geom_bar(stat="identity", width=1, color="white") +
+    coord_polar("y", start=0) + 
+    theme_void() 
+```
+
+```{r q3-a}
+Q3_temp <- sort(table(dat$Q4), decreasing = T)
+(Q3_temp <- Q3_temp / sum(Q3_temp))
+```
+
+
+At an aggregate level, it is evident that more than half of the data science community on Kaggle has a degree that is above the undergraduate level. Combining percentages of people with a master's degree or a doctoral degree (including a professional doctoral degree) gives us that $64.7/%$ of respondents hold a graduate degree. For the combination of programming skill level requirements, as well as the mount of requisite knowledge in statistics machine learning, this is an expected phenomenon. 
+
+### Most professional data scientists have a master's degree or above:
+
+```{r q3-b}
+edu.1 <- sort(table(dat[dat$Q5 == "Data Scientist",]$Q4), decreasing = T) %>% 
+    as.data.frame() %>%
+    as.tibble()
+edu.1 <- rename(edu.1, `Degree` = Var1)
+
+ggplot(edu.1, aes(x="", y=Freq, fill=`Degree`)) +
+    geom_bar(stat="identity", width=1, color="white") +
+    coord_polar("y", start=0) + 
+    theme_void() 
+```
+
+### The same doesn't necessary go for software engineering
+
+```{r q3-c}
+EDU <- table(dat$Q5, dat$Q4) %>% 
+    as.data.frame() %>%
+    as.tibble()
+EDU <- rename(EDU, `Job Title` = Var1)
+EDU <- rename(EDU, `Degree` = Var2)
+
+ggplot(EDU, aes(x="", y=Freq, fill=`Degree`)) +
+    geom_bar(stat="identity", width=1, color="white") +
+    coord_polar("y", start=0) + 
+    theme_void() + 
+    facet_wrap(vars(`Job Title`), ncol = 5) + 
+    ggtitle("Pie Chart of Degrees by Each Job Title") + 
+    theme(legend.position = "bottom")
+```
+
+```{r q3-d}
+print_pie_chart <- function(job){
+    edu <- sort(table(dat[dat$Q5 == job,]$Q4), decreasing = T) %>% 
+        as.data.frame() %>%
+        as.tibble()
+    edu <- rename(edu, `Degree` = Var1)
+    print(ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
+        geom_bar(stat="identity", width=1, color="white") +
+        coord_polar("y", start=0) + 
+        ggtitle(job) +
+        theme_void())
+}
+jobs <- unique(dat$Q5)
+for (job in jobs){
+    if (job %in% c(swe_side,data_side)){
+        print_pie_chart(job)
+    }
+}
+```
+
 ## Q4: Gender Gap in Income
 
 Is there a significant income gap between genders for these jobs?
+
+### What about at an aggregate level? 
+```{r q4}
+# Q5
+
+table(dat$Q2, dat$Q25)
+```
+
+As seen above at an aggregate level, for salary levels high and above there are a total of 799 men and only 143 women. The gender map is apparent. 
+
+### By groups aggregated depending on years of experience? 
+
+```{r q4-a}
+for (agegroup in unique(dat$Q6)){
+    if (agegroup != "I have never written code"){
+        print(agegroup)
+        print(table(dat$Q2[dat$Q6 == agegroup], dat$Q25[dat$Q6 == agegroup]))
+    }
+}
+```
 
 ## Q5: Skillset vs Income
 
 What is the typical skill set for these jobs? How does it affect the pay rate?
 
+Here the key skill is defined as a skill that has been acquired more than 10% people under certain job title.
+
 ```{r q5-skill}
+# Q5
+
 skill.set <- job.dat %>% 
+    filter(Q5 != "Other") %>%
     select(c(Q5, starts_with("Q7_"), starts_with("Q9_"), 
              starts_with("Q12_"), starts_with("Q14_"),
              starts_with("Q16_"), starts_with("Q17_"),
-             starts_with("Q18_"), starts_with("Q19_"))) %>%
-    mutate(Total = "TotalHelper") %>%
-    gather("fake_key", "skillset", -Q5, na.rm = T) %>%
+             starts_with("Q18_"), starts_with("Q19_"),
+             salary_lb)) %>%
+    mutate(Total = "`Total`") %>%
+    gather("fake_key", "skillset", 
+           -c(Q5, salary_lb), na.rm = T) %>%
     filter(!skillset %in% c("None", "Other")) %>%
     rename(title = Q5) %>%
-    count(title, skillset) %>%
+    group_by(title, skillset) %>%
+    summarise(n = n(), 
+              salary_mean = round(mean(salary_lb, na.rm = T)),
+              salary_sd = round(sd(salary_lb, na.rm = T)),
+              .groups = "drop") %>%
     group_by(title) %>%
-    mutate(prop = round(n / max(n), 3)) %>%
-    filter(prop >= 0.1 & skillset != "TotalHelper") %>%
+    mutate(prop = round(n * 100 / max(n), 1)) %>%
+    filter(prop >= 0.1) %>%
     select(-n) %>%
     arrange(title, desc(prop))
 
-datatable(skill.set, filter = 'top', width = 600)
+datatable(skill.set, filter = 'top', width = 800)
 ```
 
+From the table, huge salary variances make it very hard to tell whether a skill will increase the salary or not. 
 
 ## Q6: Correlation between Industry and Job
 
 Is there a certain correlation between industry and the need for these jobs?
 
 ```{r q6-ind}
+# Q6
+
 industry.dat <- job.dat %>%
     filter(Q5 != "Student") %>%
-    select(Q5, Q20, Q25) %>%
-    filter(Q20 %in% c("Academics/Education", 
-                      "Accounting/Finance", 
-                      "Computers/Technology",
-                      "Insurance/Risk Assessment",
-                      "Medical/Pharmaceutical",
-                      "Online Service/Internet-based Services")) %>%
-    mutate(Q25 = str_remove_all(Q25, "[$,]")) %>%
-    mutate(Q25 = str_replace(Q25, ">1000000", "1000000-2000000")) %>%
-    separate(Q25, into = c("salary_lb", "salary_ub"), sep = "-") %>%
-    mutate(salary_lb = as.numeric(salary_lb)) %>%
-    mutate(salary_ub = as.numeric(salary_ub))
+    select(Q5, Q20, salary_lb, salary_ub) %>%
+    mutate(Q20 = case_when(
+        Q20 == "Academics/Education" ~ "Academics",
+        Q20 == "Accounting/Finance" ~ "Finance", 
+        Q20 == "Computers/Technology" ~ "Computers",
+        Q20 == "Medical/Pharmaceutical" ~ "Medical",
+        Q20 == "Online Service/Internet-based Services" ~ "Internet",
+        TRUE ~ Q20
+    )) %>%
+    filter(Q20 %in% c("Academics", "Finance", "Computers",
+                      "Medical", "Internet"))
 
 p <- industry.dat %>% 
     count(Q5, Q20) %>%
@@ -236,20 +401,122 @@ p <- industry.dat %>%
         caption = glue("Author: celeritasML
                    Source: Kaggle")) +
     theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_text(angle=90, hjust=1),
           axis.title = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
 ggplotly(p)
 ```
 
-```{r}
-chisq.test(table(industry.dat$Q5, industry.dat$Q20))
+A prop.table version.
+
+```{r q6-ind-table}
+ind.dis <- industry.dat %>% 
+    filter(Q5 != "Statistician") %>%
+    rename(Title = Q5, Industry = Q20)
+ind.dis %>%
+    group_by(Industry) %>%
+    count(Title) %>%
+    mutate(Proportion = round(prop.table(n), 3)) %>%
+    select(-n) %>%
+    pivot_wider(names_from = Industry, values_from = Proportion)
 ```
 
+Some hypothesis that use prop.test to examine:  
+
+```{r q6-tests}
+aca.dis <- ind.dis %>% filter(Industry == "Academics")
+com.dis <- ind.dis %>% filter(Industry == "Computers")
+fin.dis <- ind.dis %>% filter(Industry == "Finance")
+int.dis <- ind.dis %>% filter(Industry == "Internet")
+med.dis <- ind.dis %>% filter(Industry == "Medical")
+
+ds.dis <- ind.dis %>% filter(Title == "Data Scientist")
+da.dis <- ind.dis %>% filter(Title == "Data Analyst")
+de.dis <- ind.dis %>% filter(Title == "Data Engineer")
+
+my.prop.test <- function(target.dis, other.dis, title) {
+    target <- sum(target.dis$Title == title)
+    other <- sum(other.dis$Title == title)
+    t.res <- prop.test(c(target, other),
+          c(nrow(target.dis), nrow(other.dis)),
+          alternative = "greater",
+          correct = TRUE)
+    return(paste0("X-squared = ", round(t.res$statistic,1), 
+                  ", p-value = ", formatC(t.res$p.value, 
+                                          format = "e", digits = 2),
+                  ", 95% CI = (", round(t.res$conf.int[1], 2), 
+                  ", ", round(t.res$conf.int[2], 2),"), ",
+                  if_else(t.res$p.value < 0.05, "H0 rejected", 
+                          "can't reject H0")))
+}
+
+my.prop.test2 <- function(ind.dis, title1, title2) {
+    target <- sum(ind.dis$Title == title1)
+    other <- sum(ind.dis$Title == title2)
+    t.res <- prop.test(c(target, other),
+          c(nrow(ind.dis), nrow(ind.dis)),
+          alternative = "greater",
+          correct = TRUE)
+    return(paste0("X-squared = ", round(t.res$statistic,1), 
+                  ", p-value = ", formatC(t.res$p.value, 
+                                          format = "e", digits = 2),
+                  ", 95% CI = (", round(t.res$conf.int[1], 2), 
+                  ", ", round(t.res$conf.int[2], 2),"), ",
+                  if_else(t.res$p.value < 0.05, "H0 rejected", 
+                          "can't reject H0")))
+}
+```
+
+(1) $H_a$: `Data Analyst` is more needed in `Academics` Industry.
+
+To `Computers`: `r my.prop.test(aca.dis, com.dis, "Data Analyst")`.  
+To `Finance`: `r my.prop.test(aca.dis, fin.dis, "Data Analyst")`.  
+To `Internet`: `r my.prop.test(aca.dis, int.dis, "Data Analyst")`.  
+To `Medical`:  `r my.prop.test(aca.dis, med.dis, "Data Analyst")`.
+
+**TRUE**, `Data Analyst` is more needed in `Academics` Industry.
+
+(2) $H_a$: `Data Scientist` is more needed in `Medical` Industry.
+
+To `Academics`: `r my.prop.test(med.dis, aca.dis, "Data Scientist")`.  
+To `Computers`: `r my.prop.test(med.dis, com.dis, "Data Scientist")`.  
+To `Finance`: `r my.prop.test(med.dis, fin.dis, "Data Scientist")`.  
+To `Internet`: `r my.prop.test(med.dis, int.dis, "Data Scientist")`.  
+
+**FALSE**, `Data Analyst` has similar demand in these industries.
+
+(3) $H_a$: `Software Engineer` is more needed in `Computers` Industry.
+
+To `Academics`: `r my.prop.test(com.dis, aca.dis, "Software Engineer")`.  
+To `Finance`: `r my.prop.test(com.dis, fin.dis, "Software Engineer")`.  
+To `Internet`: `r my.prop.test(com.dis, int.dis, "Software Engineer")`.  
+To `Medical`:`r my.prop.test(com.dis, med.dis, "Software Engineer")`.  
+
+**TRUE**, `Software Engineer` is more needed in `Computers` Industry.
+
+(4) $H_a$: `Machine Learning Engineer` is more needed in `Internet` Industry.
+
+To `Academics`: `r my.prop.test(com.dis, aca.dis, "Machine Learning Engineer")`.  
+To `Computers`: `r my.prop.test(med.dis, com.dis, "Machine Learning Engineer")`.  
+To `Finance`: `r my.prop.test(com.dis, fin.dis, "Machine Learning Engineer")`.  
+To `Medical`: `r my.prop.test(com.dis, med.dis, "Machine Learning Engineer")`.  
+
+**FALSE**, The demand of `Machine Learning Engineer` in `Internet` Industry is not significantly greater than in `Academics` and `Computers`.
+
+(5) $H_a$: Overall, `Data Scientist` is more needed than other jobs.
+
+To `Data Analyst`: `r my.prop.test2(ind.dis, "Data Scientist", "Data Analyst")`.  
+To `Data Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Data Engineer")`.  
+To `Software Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Software Engineer")`.  
+To `ML Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Machine Learning Engineer")`.  
+
+**TRUE**, `Data Scientist` is more needed than other 4 jobs.
+
+Salaries for these jobs vary widely from industry to industry.
 
 ```{r q6-ind-sal}
-industry.dat %>% 
+p <- industry.dat %>% 
+    filter(salary_lb != 1000000) %>%
     mutate(Q20 = fct_reorder(Q20, salary_lb, .fun='length')) %>%
     ggplot(aes(x=Q20, y=salary_lb)) +
     geom_boxplot() +
@@ -260,15 +527,11 @@ industry.dat %>%
         caption = glue("Author: celeritasML
                    Source: Kaggle")) +
     theme(axis.ticks.x = element_blank(),
-          axis.text.x = element_text(angle=90, hjust=1),
+          axis.text.x = element_blank(),
           axis.title = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank())
-```
-
-
-```{marginfigure}
-The following questions are majorly about data science skills, tools and technologies.
+ggplotly(p, tooltip="text")
 ```
 
 ## Q7: Languages and IDEs
@@ -277,7 +540,16 @@ What programming languages and IDEs do they use?
 
 Survey questions Q7 (daily-used programming language), Q9 (IDE).
 
+In the heatmap of programming language below, some trends can be found:
+
+ - `Python`, `R`, and `SQL` are three most popular language in Kaggle community.
+ - `Statisticians` use `R` more than `Python` and `SQL`.
+ - `C++`, `Java`, `Javascript` are mainly used by `Software Engineer`.
+ - `Julia` and `Swift` are barely used by Kaggle users.
+
 ```{r q7-lan}
+# Q7
+
 programming <- job.dat %>% 
     select(c(Q5, starts_with("Q7_"))) %>%
     gather("fake_key", "language", -Q5, na.rm = T) %>%
@@ -309,6 +581,13 @@ p <- programming %>%
           panel.grid.minor = element_blank())
 ggplotly(p, tooltip="text")
 ```
+
+In the heatmap of IDE below, some trends can be found:
+
+ - `Jupyter Notebook` is the most popular IDE for Kaggle users.
+ - `MATLAB` is barely used in the industry(last 5 jobs).
+ - `Statisticians` use `RStudio` the most.
+ - `VSCode` is overall the second common-used IDE.
 
 ```{r q7-ide}
 ide <- job.dat %>% 
@@ -348,13 +627,52 @@ p <- ide %>%
 ggplotly(p, tooltip="text")
 ```
 
+From two plots above, while Python becomes the most popular programming language for Kaggle users, Jupyter Notebook (a Python IDE) also becomes the most commonly used IDE. Are there any correlation between them?
+
+```{r q7-py-jupyter}
+pj.dat <- job.dat %>% 
+        select(c(Q5, Q7_Part_1, Q9_Part_1, Q9_Part_11)) %>% 
+        rename(Title = Q5) %>%
+        mutate(Python = !is.na(Q7_Part_1),
+               Jupyter = !is.na(Q9_Part_1) | !is.na(Q9_Part_11)) %>%
+        select(Title, Python, Jupyter) %>%
+        pivot_longer(cols = c(Python, Jupyter)) %>%
+        filter(value == TRUE)
+py.ju.test <- function(excludes) {
+    pj.t.dat <- pj.dat %>% filter(!Title %in% excludes)
+    print(table(pj.t.dat$name, pj.t.dat$Title))
+    pj.t.res <- chisq.test(pj.t.dat$name, pj.t.dat$Title, 
+                           simulate.p.value = T)
+    return(paste0("X-squared = ", round(pj.t.res$statistic, 1), 
+                  ", p-value = ", round(pj.t.res$p.value, 2),
+                  if_else(pj.t.res$p.value < 0.05, ", H0 rejected", 
+                          ", can't reject H0")))
+}
+table(pj.dat$Title, pj.dat$name)
+```
+
+$H_a$: The distribution of Python is significantly different from the distribution of Jupyter Notebook.
+
+All job titles: `r py.ju.test(c())`.  
+Without `Statistician`: `r py.ju.test(c("Statistician"))`.  
+Without `Statistician`, `Student`: `r py.ju.test(c("Statistician", "Student"))`.  
+
+**FALSE**. There is no significant difference between the distribution of Python and the distribution of Jupyter Notebook among jobs. In the other words, most people who use Python also use Jupyter Notebook as the IDE.
+
 ## Q8: Learning Sources
 
 Where do they get and share the knowledge?
 
 Survey questions Q39 (share and deploy), Q40 (learning resources), Q42 (Media sources).
 
+In the heatmap of learning platform below, some trends can be found:
+
+ - `Coursera` is the most popular learning platform outside the University.
+ - `Statisticans` learn knowledge mainly from `University` course.
+
 ```{r q8-learn}
+# Q8
+
 learning_platform <- job.dat %>%
     select(c(Q5, starts_with("Q40_"))) %>%
     gather("fake_key", "learning", -Q5, na.rm = T) %>%
@@ -391,6 +709,14 @@ p <- learning_platform %>%
           panel.grid.minor = element_blank())
 ggplotly(p, tooltip="text")
 ```
+
+In the heatmap of sharing platform below, some trends can be found:
+
+ - `GitHub` is the most popular sharing platform.
+ - `Kaggle`, `Colab`, `Personal Blog` are used by a small proportion of Kaggle Users.
+ - Other platforms listed on the questionare are barely used by Kaggle Users.
+ - A large proportion of people don't share their works to public.
+ - None of `Student` answered this question.
 
 ```{r q8-share}
 share_deploy <- job.dat %>% 
@@ -431,6 +757,11 @@ p <- share_deploy %>%
 ggplotly(p, tooltip="text")
 ```
 
+In the heatmap of media source below, some trends can be found:
+
+ - `Blog`, `Kaggle`, `YouTube` are three most popular media source.
+ - Many `Statisticians` use `Journal Publication` as their media sources.
+
 ```{r q8-media}
 media_source <- job.dat %>% 
     select(c(Q5, starts_with("Q42_"))) %>%
@@ -465,6 +796,17 @@ p <- media_source %>%
 ggplotly(p, tooltip="text")
 ```
 
+Special Job Title: `Statistician`
+
+From all analysis above, `Statistician` shows many different preference than other jobs. For example:
+
+ - Only a few people identify themselves as `Statistician`.
+ - They mostly work in `Academic` industry.
+ - They use `R` more frequently, also they use `RStudio` a lot.
+ - They learn most knowledge from `University Courses`.
+ - Many of them use `Journal Publication` to get report on data science topics.
+
+Based on these features, `Statisticians` are very likely to be a job title specially for professors and researchers in academic institutions (i.e. universities). 
 
 ## Q9: Popular Packages
 
