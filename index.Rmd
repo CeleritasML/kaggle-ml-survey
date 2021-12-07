@@ -21,9 +21,10 @@ knitr::opts_chunk$set(cache = TRUE,
 options(htmltools.dir.version = FALSE)
 
 if (!require("pacman")) install.packages("pacman")
+if (!require("waffle")) install.packages("waffle", repos = "https://cinc.rud.is")
 pacman::p_load(tidyverse, ggthemes, latex2exp, glue,
                hrbrthemes, plotly, stringr, DT, extrafont,
-               tidymodels, rmdformats)
+               tidymodels, rmdformats, waffle, pals)
 
 set.seed(511)
 
@@ -56,6 +57,7 @@ For this project, the goal is to tell a data science story about data science pr
 # Data and Cleaning
 
 ```{r pkg, message=FALSE}
+
 col_names <- names(read_csv(
   "data/kaggle_survey_2021_responses.csv",
   n_max=0))
@@ -123,9 +125,12 @@ Additionally, it is also worth investigating the requisite skillsets for each of
 
 ## Job Titles Distributions
 
-What percentage of the survey respondents are working under these job titles? 
+What percentage of the survey respondents are working under these job titles?
+
+> The percentages are shown in the legends of the following waffle plot.
 
 ```{r q1-job}
+
 # Q1
 
 jtitle <- sort(table(dat$Q5), decreasing = T) %>% 
@@ -133,15 +138,20 @@ jtitle <- sort(table(dat$Q5), decreasing = T) %>%
     as.tibble()
 jtitle <- rename(jtitle, `Job Title` = Var1)
 
-ggplot(jtitle, aes(x="", y=Freq, fill=`Job Title`)) +
-    geom_bar(stat="identity", width=1, color="white") +
-    coord_polar("y", start=0) + 
-    theme_void()+
-    labs(
+x <- jtitle$Freq/25
+val_names <- sprintf("%s (%s)", jtitle$`Job Title`,
+                     scales::percent(round(x/sum(x), 3)))
+names(x) <- val_names
+waffle(x, rows = 5, color = pals::parula(n=15)) +
+  labs(
         title = "Job Title Distributions",
         subtitle = "US respondents in Kaggle's annual survey",
         caption = glue("Author: celeritasML
-                   Source: Kaggle"))
+                   Source: Kaggle")) +
+  theme_ipsum_rc(grid="") +
+  theme_enhance_waffle() +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size=6))
 ```
 
 ## Salaries
@@ -164,6 +174,7 @@ The new categories* for salaries will be:
 
 
 ```{r q2}
+
 # Q2
 
 # To change salary categories into FACTOR dtype with descending labels
@@ -229,6 +240,7 @@ dat[dat$Q5 %in% academia & !is.na(dat$Q5) & !is.na(dat$Q25), ] %>%
 A chi-squared test of independence can be used to test for the statistical significance in the difference in categorical frequencies in each salary category for each job title. On the one hand, the test is done on data-oriented data science roles, see below: 
 
 ```{r q2-a}
+
 expectedcounts <- function(A){
   r <- rowSums(A)
   c <- colSums(A)
@@ -263,6 +275,7 @@ It is also worth noting that most of the highest earning ($>\$500,000$) people i
 Below, the analysis focuses on the job titles that have a focus on software and product management, such as machine learning engineer (MLE), software engineer (SWE), and product manager (PM). 
 
 ```{r q2-b}
+
 q2_table.2 = table(dat$Q25[dat$Q5 %in% swe_side], dat$Q5[dat$Q5 %in% swe_side])
 q2_table.df2 = q2_table.2 %>% as.data.frame() %>% as.tibble()
 q2_expectedcounts2 <- expectedcounts(q2_table.2) %>% as.data.frame() %>% as.tibble()
@@ -287,7 +300,10 @@ What levels of education are required for these job titles?
 
 ### Aggregate Level
 
+> The percentages are shown in the legends of the following waffle plot.
+
 ```{r q3}
+
 # Q3
 
 edu <- sort(table(dat$Q4), decreasing = T) %>% 
@@ -295,18 +311,24 @@ edu <- sort(table(dat$Q4), decreasing = T) %>%
     as.tibble()
 edu <- rename(edu, `Degree` = Var1)
 
-ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
-    geom_bar(stat="identity", width=1, color="white") +
-    coord_polar("y", start=0) + 
-    theme_void() +
-    labs(
-        title = "Pie Chart of Education Level",
+x <- edu$Freq/18
+val_names <- sprintf("%s (%s)", edu$Degree,
+                     scales::percent(round(x/sum(x), 3)))
+names(x) <- val_names
+waffle(x, rows = 5, color = pals::parula(n=7)) +
+  labs(
+        title = "Waffle Chart of Education Level",
         subtitle = "US respondents in Kaggle's annual survey",
         caption = glue("Author: celeritasML
-                   Source: Kaggle"))
+                   Source: Kaggle")) +
+  theme_ipsum_rc(grid="") +
+  theme_enhance_waffle() +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size=6))
 ```
 
 ```{r q3-a}
+
 Q3_temp <- sort(table(dat$Q4), decreasing = T)
 (Q3_temp <- Q3_temp / sum(Q3_temp))
 ```
@@ -316,56 +338,67 @@ At an aggregate level, it is evident that more than half of the data science com
 
 ### Most professional data scientists have a master's degree or above:
 
+> The percentages are shown in the legends of the following waffle plot.
+
 ```{r q3-b}
+
 edu.1 <- sort(table(dat[dat$Q5 == "Data Scientist",]$Q4), decreasing = T) %>% 
     as.data.frame() %>%
     as.tibble()
 edu.1 <- rename(edu.1, `Degree` = Var1)
 
-ggplot(edu.1, aes(x="", y=Freq, fill=`Degree`)) +
-    geom_bar(stat="identity", width=1, color="white") +
-    coord_polar("y", start=0) + 
-    theme_void() +
-    labs(
-        title = "Pie Chart of Education Level",
+x <- edu.1$Freq/5
+val_names <- sprintf("%s (%s)", edu$Degree,
+                     scales::percent(round(x/sum(x), 3)))
+names(x) <- val_names
+waffle(x, rows = 5, color = pals::parula(n=7)) +
+  labs(
+        title = "Waffle Chart of Education Level",
         subtitle = "Subset of Data Scientists",
         caption = glue("Author: celeritasML
-                   Source: Kaggle"))
+                   Source: Kaggle")) +
+  theme_ipsum_rc(grid="") +
+  theme_enhance_waffle() +
+  theme(legend.position = "bottom",
+        legend.text = element_text(size=6))
 ```
 
 ### The same doesn't necessary go for software engineering
 
 ```{r q3-c}
+
 EDU <- table(dat$Q5, dat$Q4) %>% 
     as.data.frame() %>%
     as.tibble()
 EDU <- rename(EDU, `Job Title` = Var1)
 EDU <- rename(EDU, `Degree` = Var2)
-
-# ggplot(EDU, aes(x="", y=Freq, fill=`Degree`)) +
-#     geom_bar(stat="identity", width=1, color="white") +
-#     coord_polar("y", start=0) + 
-#     theme_void() + 
-#     facet_wrap(vars(`Job Title`), ncol = 5) + 
-#     ggtitle("Pie Chart of Degrees by Each Job Title") + 
-#     theme(legend.position = "bottom")
 ```
 
+> The percentages are shown in the legends of the following waffle plot.
+
 ```{r q3-d}
+
 print_pie_chart <- function(job){
     edu <- sort(table(dat[dat$Q5 == job,]$Q4), decreasing = T) %>% 
         as.data.frame() %>%
         as.tibble()
     edu <- rename(edu, `Degree` = Var1)
-    print(ggplot(edu, aes(x="", y=Freq, fill=`Degree`)) +
-        geom_bar(stat="identity", width=1, color="white") +
-        coord_polar("y", start=0) + 
-        theme_void()) +
-        labs(
-          title = "Pie Chart of Education Level",
-          subtitle = glue("Subset of ", job),
-          caption = glue("Author: celeritasML
-                     Source: Kaggle"))
+    
+    x <- edu$Freq/ceiling(min(edu$Freq))
+    val_names <- sprintf("%s (%s)", edu$Degree,
+                         scales::percent(round(x/sum(x), 3)))
+    names(x) <- val_names
+    p <- waffle(x, rows = 5, color = pals::parula(n=length(unique(edu$Degree)))) +
+      labs(
+            title = "Waffle Chart of Education Level",
+            subtitle = glue("Subset of ", job),
+            caption = glue("Author: celeritasML
+                       Source: Kaggle")) +
+      theme_ipsum_rc(grid="") +
+      theme_enhance_waffle() +
+      theme(legend.position = "bottom",
+            legend.text = element_text(size=6))
+    print(p)
 }
 jobs <- unique(dat$Q5)
 
@@ -379,6 +412,7 @@ Is there a significant income gap between genders for these jobs?
 
 ### What about at an aggregate level? 
 ```{r q4}
+
 # Q5
 
 table(dat$Q2, dat$Q25)
@@ -389,6 +423,7 @@ As seen above at an aggregate level, for salary levels high and above there are 
 ### By groups aggregated depending on years of experience? 
 
 ```{r q4-a}
+
 for (agegroup in unique(dat$Q6)){
     if (agegroup != "I have never written code"){
         print(agegroup)
@@ -404,6 +439,7 @@ What is the typical skill set for these jobs? How does it affect the pay rate?
 Here the key skill is defined as a skill that has been acquired more than 10% people under certain job title.
 
 ```{r q5-skill}
+
 # Q5
 
 skill.set <- job.dat %>% 
@@ -439,6 +475,7 @@ From the table, huge salary variances make it very hard to tell whether a skill 
 Is there a certain correlation between industry and the need for these jobs?
 
 ```{r q6-ind}
+
 # Q6
 
 industry.dat <- job.dat %>%
@@ -474,9 +511,10 @@ p <- industry.dat %>%
 ggplotly(p)
 ```
 
-A prop.table version.
+A `prop.table` version.
 
 ```{r q6-ind-table}
+
 ind.dis <- industry.dat %>% 
     filter(Q5 != "Statistician") %>%
     rename(Title = Q5, Industry = Q20)
@@ -491,6 +529,7 @@ ind.dis %>%
 Some hypothesis that use `prop.test` to examine:  
 
 ```{r q6-tests}
+
 aca.dis <- ind.dis %>% filter(Industry == "Academics")
 com.dis <- ind.dis %>% filter(Industry == "Computers")
 fin.dis <- ind.dis %>% filter(Industry == "Finance")
@@ -582,6 +621,7 @@ To `ML Engineer`: `r my.prop.test2(ind.dis, "Data Scientist", "Machine Learning 
 Salaries for these jobs vary widely from industry to industry.
 
 ```{r q6-ind-sal}
+
 p <- industry.dat %>% 
     filter(salary_lb != 1000000) %>%
     mutate(Q20 = fct_reorder(Q20, salary_lb, .fun='length')) %>%
@@ -615,6 +655,7 @@ In the heatmap of programming language below, some trends can be found:
  - `Julia` and `Swift` are barely used by Kaggle users.
 
 ```{r q7-lan}
+
 # Q7
 
 programming <- job.dat %>% 
@@ -657,6 +698,7 @@ In the heatmap of IDE below, some trends can be found:
  - `VSCode` is overall the second common-used IDE.
 
 ```{r q7-ide}
+
 ide <- job.dat %>% 
     select(c(Q5, starts_with("Q9_"))) %>%
     gather("fake_key", "IDE", -Q5, na.rm = T) %>%
@@ -697,6 +739,7 @@ ggplotly(p, tooltip="text")
 From two plots above, while Python becomes the most popular programming language for Kaggle users, Jupyter Notebook (a Python IDE) also becomes the most commonly used IDE. Are there any correlation between them?
 
 ```{r q7-py-jupyter}
+
 pj.dat <- job.dat %>% 
         select(c(Q5, Q7_Part_1, Q9_Part_1, Q9_Part_11)) %>% 
         rename(Title = Q5) %>%
@@ -738,6 +781,7 @@ In the heatmap of learning platform below, some trends can be found:
  - `Statisticans` learn knowledge mainly from `University` course.
 
 ```{r q8-learn}
+
 # Q8
 
 learning_platform <- job.dat %>%
@@ -786,6 +830,7 @@ In the heatmap of sharing platform below, some trends can be found:
  - None of `Student` answered this question.
 
 ```{r q8-share}
+
 share_deploy <- job.dat %>% 
     select(c(Q5, starts_with("Q39_"))) %>%
     gather("fake_key", "share", -Q5, na.rm = T) %>%
@@ -830,6 +875,7 @@ In the heatmap of media source below, some trends can be found:
  - Many `Statisticians` use `Journal Publication` as their media sources.
 
 ```{r q8-media}
+
 media_source <- job.dat %>% 
     select(c(Q5, starts_with("Q42_"))) %>%
     gather("fake_key", "media", -Q5, na.rm = T) %>%
@@ -884,6 +930,7 @@ The data is a subset of survey answer to Q14 and Q16, which emphasize on visuali
 Additionally, as the number of machine learning libraries covered in the survey exceeds a reasonable number of meaning palette colors, only the top 10 libraries are kept in the visualization.
 
 ```{r q9-viz}
+
 # Q9
 
 viz_lib <- dat %>%
@@ -918,7 +965,9 @@ ggplot(viz_lib) +
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
 ```
+
 ```{r q9-ml}
+
 ml_lib <- dat %>%
   select(Q5, starts_with("Q16")) %>%
   select(-c(Q16_Part_17, Q16_OTHER))
@@ -968,6 +1017,7 @@ $$P(A|B) = \frac{P(B|A)\cdot P(A)}{P(B)} = \frac{P(A \cap  B)}{P(B)}$$
 where $A$ and $B$ are events.
 
 ```{r}
+
 viz_lib %>%
   group_by(Q5) %>%
   table() %>%
@@ -1035,6 +1085,7 @@ The following three tests are conducted between:
 - EC2 vs SageMaker
 
 ```{r q10}
+
 # Q10
 
 aws_user <- tibble(
@@ -1090,6 +1141,7 @@ The test statistic (z-statistic) can be calculated as follow:
 $$z=\frac{p_A-p_B}{\sqrt{p(1-p)/n_A+p(1-p)/n_B}}$$
 
 ```{r q11}
+
 # Q11
 
 cloud_comp <- tibble(
@@ -1103,6 +1155,7 @@ cloud_comp <- tibble(
 ```
 
 ```{r q11-a}
+
 prop.test(c(sum(cloud_comp$aws_usage), sum(cloud_comp$azure_usage)),
           c(nrow(cloud_comp), nrow(cloud_comp)),
           alternative = "two.sided",
@@ -1140,6 +1193,7 @@ Honestly speaking, the best way to approach this question is to apply a logistic
 A quick glimpse at the response will uncover the fact that the `salary` is not normally distributed. In fact, it is right-skewed with a long tail. A log-transformation on `salary` will not fully fix this issue, but indeed make the linear model fitting easier.
 
 ```{r q12-lm}
+
 # Q12
 
 lm_dat <- dat %>%
@@ -1207,10 +1261,12 @@ Afterwards, the function `MASS::stepAIC()` is used to do a stepwise regression i
 - Interactions between jobs and other variables, `job:experience`, `job:education`.
 
 ```{r q12-lm-model}
+
 model1 <- lm(log(salary) ~ . + sql:r + sql:python + r:python + python:r:sql +
                job:sql + job:r + job:python + job:experience +
                job:education, data=lm_dat)
 model2 <- MASS::stepAIC(model1, trace = FALSE)
+
 ```
 
 Finally, the automatic procedure of model fitting returns the following model as the result:
